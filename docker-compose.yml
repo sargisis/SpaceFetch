@@ -19,6 +19,45 @@ services:
     volumes:
       - redis-data:/data
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: spacefetch-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongodb
+      - redis
+    env_file:
+      - .env
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017
+      - REDIS_ADDR=redis:6379
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: spacefetch-worker
+    depends_on:
+      - mongodb
+      - redis
+    env_file:
+      - .env
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017
+      - REDIS_ADDR=redis:6379
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: spacefetch-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+
 volumes:
   mongo-data:
   redis-data:
