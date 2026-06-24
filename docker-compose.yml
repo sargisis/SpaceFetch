@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: spacefetch-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: spacefetch
+
+  redis:
+    image: redis:7-alpine
+    container_name: spacefetch-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+volumes:
+  mongo-data:
+  redis-data:
