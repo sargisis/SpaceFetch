@@ -129,6 +129,20 @@ func (f *fallbackClient) GenerateSummaries(ctx context.Context, asteroid models.
 		switch lang {
 		case "ru":
 			result["ru"] = fmt.Sprintf("Астероид %s диаметром %.1f метров движется со скоростью %.1f км/ч. Оценочная стоимость добычи: %d USD.", asteroid.Name, asteroid.Metrics.DiameterMeters, asteroid.Metrics.VelocityKmH, asteroid.MiningEconomy.EstimatedValueUSD)
+		case "pl":
+			result["pl"] = fmt.Sprintf("Asteroida %s o średnicy %.1f metrów porusza się z prędkością %.1f km/h. Szacowana wartość wydobycia: %d USD.", asteroid.Name, asteroid.Metrics.DiameterMeters, asteroid.Metrics.VelocityKmH, asteroid.MiningEconomy.EstimatedValueUSD)
+		case "uk":
+			result["uk"] = fmt.Sprintf("Астероїд %s діаметром %.1f метрів рухається зі швидкістю %.1f км/год. Оціночна вартість видобутку: %d USD.", asteroid.Name, asteroid.Metrics.DiameterMeters, asteroid.Metrics.VelocityKmH, asteroid.MiningEconomy.EstimatedValueUSD)
+		case "hy":
+			result["hy"] = fmt.Sprintf("Աստղակերպ %s-ը %.1f մետր տրամագծով շարժվում է %.1f կմ/ժ արագությամբ։ Արդյունահանման գնահատված արժեքը՝ %d USD:", asteroid.Name, asteroid.Metrics.DiameterMeters, asteroid.Metrics.VelocityKmH, asteroid.MiningEconomy.EstimatedValueUSD)
+		case "ka":
+			result["ka"] = fmt.Sprintf("ასტეროიდი %s დიამეტრით %.1f მეტრი მოძრაობს სიჩქარით %.1f კმ/სთ. მოპოვების სავარაუდო ღირებულება: %d USD.", asteroid.Name, asteroid.Metrics.DiameterMeters, asteroid.Metrics.VelocityKmH, asteroid.MiningEconomy.EstimatedValueUSD)
+		case "de":
+			result["de"] = fmt.Sprintf("Asteroid %s mit einem Durchmesser von %.1f Metern bewegt sich mit einer Geschwindigkeit von %.1f km/h. Geschätzter Bergbauwert: %d USD.", asteroid.Name, asteroid.Metrics.DiameterMeters, asteroid.Metrics.VelocityKmH, asteroid.MiningEconomy.EstimatedValueUSD)
+		case "es":
+			result["es"] = fmt.Sprintf("El asteroide %s con un diámetro de %.1f metros se mueve a %.1f km/h. Valor estimado de minería: %d USD.", asteroid.Name, asteroid.Metrics.DiameterMeters, asteroid.Metrics.VelocityKmH, asteroid.MiningEconomy.EstimatedValueUSD)
+		case "fr":
+			result["fr"] = fmt.Sprintf("L'astéroïde %s d'un diamètre de %.1f mètres se déplace à %.1f km/h. Valeur minière estimée : %d USD.", asteroid.Name, asteroid.Metrics.DiameterMeters, asteroid.Metrics.VelocityKmH, asteroid.MiningEconomy.EstimatedValueUSD)
 		default:
 			result[lang] = fmt.Sprintf("Asteroid %s with diameter %.1f meters moving at %.1f km/h. Estimated mining value: %d USD.", asteroid.Name, asteroid.Metrics.DiameterMeters, asteroid.Metrics.VelocityKmH, asteroid.MiningEconomy.EstimatedValueUSD)
 		}

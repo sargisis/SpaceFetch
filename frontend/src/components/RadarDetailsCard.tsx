@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { X, ShieldAlert, Sparkles, Coins } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface AsteroidData {
   id: string;
@@ -28,10 +29,11 @@ interface RadarDetailsCardProps {
 
 export default function RadarDetailsCard({ asteroid, onClose }: RadarDetailsCardProps) {
   if (!asteroid) return null;
+  const { language } = useLanguage();
 
   const getSummary = (): string => {
     if (typeof asteroid.ai_summary === 'object' && asteroid.ai_summary !== null) {
-      return asteroid.ai_summary.ru || asteroid.ai_summary.en || '';
+      return (asteroid.ai_summary as Record<string, string>)[language] || asteroid.ai_summary.en || asteroid.ai_summary.ru || '';
     }
     return (asteroid.ai_summary as string) || '';
   };

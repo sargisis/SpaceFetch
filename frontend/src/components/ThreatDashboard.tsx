@@ -5,7 +5,6 @@ import {
   Gem,
   Ruler,
   Target,
-  TrendingUp,
   AlertTriangle,
   ChevronDown,
   ChevronUp,
@@ -85,7 +84,7 @@ function getThreatGradient(score: number): string {
 }
 
 export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [sortKey, setSortKey] = useState<SortKey>('threat');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -130,7 +129,7 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
   if (loading) {
     return (
       <div className="flex h-[350px] w-full items-center justify-center text-accent/50 font-mono animate-pulse">
-        ANALYZING THREAT MATRIX...
+        {t('threat.loading')}
       </div>
     );
   }
@@ -139,14 +138,12 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
     return (
       <div className="flex flex-col h-[350px] w-full items-center justify-center text-slate-500 text-xs font-mono gap-3">
         <ShieldAlert className="h-8 w-8 text-slate-600" />
-        <span>No asteroid telemetry available. Backend offline or no data synced.</span>
+        <span>{t('threat.empty')}</span>
       </div>
     );
   }
 
   const maxDiameter = Math.max(...asteroids.map(a => a.metrics.diameter_meters));
-  const maxSpeed = Math.max(...asteroids.map(a => a.metrics.velocity_km_h));
-  const maxValue = Math.max(...asteroids.map(a => a.mining_economy.estimated_value_usd));
   const maxProximity = Math.max(...asteroids.map(a => a.metrics.miss_distance_km));
 
   return (
@@ -155,10 +152,10 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
       <div className="border-b border-white/5 pb-4">
         <h2 className="text-2xl font-bold font-heading text-white flex items-center gap-2">
           <ShieldAlert className="h-6 w-6 text-red-400" />
-          Asteroid Threat Dashboard
+          {t('threat.title')}
         </h2>
         <p className="text-xs text-slate-400 mt-1">
-          Real-time near-Earth object threat analysis — composite scoring based on proximity, velocity, size, and hazard classification
+          {t('threat.subtitle')}
         </p>
       </div>
 
@@ -167,31 +164,31 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <StatCard 
             icon={<Target className="h-4 w-4" />}
-            label="TRACKED" 
+            label={t('threat.tracked')} 
             value={stats.total.toString()} 
-            sub="objects today"
+            sub={t('threat.objectsToday')}
             color="text-blue-400"
             borderColor="border-blue-500/20"
           />
           <StatCard 
             icon={<AlertTriangle className="h-4 w-4" />}
-            label="HAZARDOUS" 
+            label={t('threat.hazardous')} 
             value={stats.hazardous.toString()} 
-            sub={`of ${stats.total} total`}
+            sub={`${stats.hazardous} / ${stats.total}`}
             color="text-red-400"
             borderColor="border-red-500/20"
           />
           <StatCard 
             icon={<Gauge className="h-4 w-4" />}
-            label="MAX THREAT" 
+            label={t('threat.maxThreat')} 
             value={`${stats.maxThreat}%`} 
-            sub="threat score"
+            sub={t('threat.threatScore')}
             color={stats.maxThreat >= 50 ? 'text-orange-400' : 'text-yellow-400'}
             borderColor={stats.maxThreat >= 50 ? 'border-orange-500/20' : 'border-yellow-500/20'}
           />
           <StatCard 
             icon={<Zap className="h-4 w-4" />}
-            label="AVG SPEED" 
+            label={t('threat.avgSpeed')} 
             value={`${formatNumber(stats.avgSpeed)}`} 
             sub="km/h"
             color="text-purple-400"
@@ -199,17 +196,17 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
           />
           <StatCard 
             icon={<Ruler className="h-4 w-4" />}
-            label="CLOSEST" 
+            label={t('threat.closest')} 
             value={`${formatNumber(stats.closest)}`} 
-            sub="km miss"
+            sub={t('threat.kmMiss')}
             color="text-cyan-400"
             borderColor="border-cyan-500/20"
           />
           <StatCard 
             icon={<DollarSign className="h-4 w-4" />}
-            label="TOTAL VALUE" 
+            label={t('threat.totalValue')} 
             value={`$${formatNumber(stats.totalValue)}`} 
-            sub="mining est."
+            sub={t('threat.miningEst')}
             color="text-emerald-400"
             borderColor="border-emerald-500/20"
           />
@@ -222,14 +219,13 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
           <div className="flex items-center gap-2 mb-4">
             <Gauge className="h-4 w-4 text-accent" />
             <span className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">
-              GLOBAL THREAT INDEX
+              {t('threat.globalIndex')}
             </span>
           </div>
           <div className="h-4 rounded-full bg-black/40 border border-white/5 overflow-hidden relative">
             <div className="absolute inset-0 flex">
               {sorted.map((ast, i) => {
                 const width = (1 / sorted.length) * 100;
-                const threat = getThreatLevel(ast.threatScore);
                 return (
                   <div
                     key={ast.id}
@@ -257,13 +253,13 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
 
       {/* Sort Controls */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Sort by:</span>
+        <span className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">{t('threat.sortBy')}:</span>
         {([
-          { key: 'threat', label: 'Threat Score', icon: <ShieldAlert className="h-3 w-3" /> },
-          { key: 'proximity', label: 'Closest First', icon: <Target className="h-3 w-3" /> },
-          { key: 'speed', label: 'Speed', icon: <Zap className="h-3 w-3" /> },
-          { key: 'size', label: 'Size', icon: <Ruler className="h-3 w-3" /> },
-          { key: 'value', label: 'Mining Value', icon: <Gem className="h-3 w-3" /> },
+          { key: 'threat', label: t('threat.sortThreat'), icon: <ShieldAlert className="h-3 w-3" /> },
+          { key: 'proximity', label: t('threat.sortProximity'), icon: <Target className="h-3 w-3" /> },
+          { key: 'speed', label: t('threat.sortSpeed'), icon: <Zap className="h-3 w-3" /> },
+          { key: 'size', label: t('threat.sortSize'), icon: <Ruler className="h-3 w-3" /> },
+          { key: 'value', label: t('threat.sortValue'), icon: <Gem className="h-3 w-3" /> },
         ] as { key: SortKey; label: string; icon: JSX.Element }[]).map(s => (
           <button
             key={s.key}
@@ -285,7 +281,7 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
         {sorted.map((ast, index) => {
           const threat = getThreatLevel(ast.threatScore);
           const isExpanded = expandedId === ast.id;
-          const desc = typeof ast.ai_summary === 'object' ? (ast.ai_summary.en || ast.ai_summary.ru) : ast.ai_summary;
+          const desc = typeof ast.ai_summary === 'object' ? ((ast.ai_summary as Record<string, string>)[language] || ast.ai_summary.en || ast.ai_summary.ru) : ast.ai_summary;
 
           return (
             <div
@@ -367,7 +363,7 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
                     {/* Size comparison */}
                     <div>
                       <span className="text-[9px] font-mono uppercase tracking-wider text-slate-500 block mb-2 flex items-center gap-1">
-                        <Ruler className="h-3 w-3" /> Diameter comparison
+                        <Ruler className="h-3 w-3" /> {t('threat.diameterComparison')}
                       </span>
                       <div className="space-y-1.5">
                         <BarRow 
@@ -378,16 +374,16 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
                           color="bg-gradient-to-r from-blue-500 to-cyan-400"
                           highlight
                         />
-                        <BarRow label="Statue of Liberty" value={93} max={maxDiameter} unit="m" color="bg-slate-600" />
-                        <BarRow label="Boeing 747" value={70.7} max={maxDiameter} unit="m" color="bg-slate-700" />
-                        <BarRow label="Blue Whale" value={30} max={maxDiameter} unit="m" color="bg-slate-700" />
+                        <BarRow label={t('threat.statueOfLiberty')} value={93} max={maxDiameter} unit="m" color="bg-slate-600" />
+                        <BarRow label={t('threat.boeing747')} value={70.7} max={maxDiameter} unit="m" color="bg-slate-700" />
+                        <BarRow label={t('threat.blueWhale')} value={30} max={maxDiameter} unit="m" color="bg-slate-700" />
                       </div>
                     </div>
 
                     {/* Speed comparison */}
                     <div>
                       <span className="text-[9px] font-mono uppercase tracking-wider text-slate-500 block mb-2 flex items-center gap-1">
-                        <Zap className="h-3 w-3" /> Velocity comparison
+                        <Zap className="h-3 w-3" /> {t('threat.velocityComparison')}
                       </span>
                       <div className="space-y-1.5">
                         <BarRow 
@@ -398,9 +394,9 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
                           color="bg-gradient-to-r from-purple-500 to-pink-400"
                           highlight
                         />
-                        <BarRow label="ISS Orbital Speed" value={27600} max={Math.max(ast.metrics.velocity_km_h, 40000)} unit="km/h" color="bg-slate-600" />
-                        <BarRow label="Bullet" value={4000} max={Math.max(ast.metrics.velocity_km_h, 40000)} unit="km/h" color="bg-slate-700" />
-                        <BarRow label="Sound" value={1235} max={Math.max(ast.metrics.velocity_km_h, 40000)} unit="km/h" color="bg-slate-700" />
+                        <BarRow label={t('threat.issSpeed')} value={27600} max={Math.max(ast.metrics.velocity_km_h, 40000)} unit="km/h" color="bg-slate-600" />
+                        <BarRow label={t('threat.bullet')} value={4000} max={Math.max(ast.metrics.velocity_km_h, 40000)} unit="km/h" color="bg-slate-700" />
+                        <BarRow label={t('threat.sound')} value={1235} max={Math.max(ast.metrics.velocity_km_h, 40000)} unit="km/h" color="bg-slate-700" />
                       </div>
                     </div>
                   </div>
@@ -408,7 +404,7 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
                   {/* Proximity gauge */}
                   <div>
                     <span className="text-[9px] font-mono uppercase tracking-wider text-slate-500 block mb-2 flex items-center gap-1">
-                      <Target className="h-3 w-3" /> Miss Distance — Earth proximity scale
+                      <Target className="h-3 w-3" /> {t('threat.missDistance')}
                     </span>
                     <div className="relative h-8 rounded-lg bg-black/40 border border-white/5 overflow-hidden">
                       {/* Danger zone */}
@@ -434,7 +430,7 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
                     </div>
                     <div className="flex justify-between mt-1 text-[8px] font-mono text-slate-600">
                       <span>🌍 Earth</span>
-                      <span>{formatNumber(ast.metrics.miss_distance_km)} km from Earth</span>
+                      <span>{formatNumber(ast.metrics.miss_distance_km)} {t('threat.kmFromEarth')}</span>
                       <span>{formatNumber(maxProximity)} km</span>
                     </div>
                   </div>
@@ -444,17 +440,17 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
                     {/* Mining details */}
                     <div className="p-4 rounded-xl border border-white/5 bg-black/20">
                       <span className="text-[9px] font-mono uppercase tracking-wider text-emerald-400 block mb-3 flex items-center gap-1">
-                        <Gem className="h-3 w-3" /> Mining Economics
+                        <Gem className="h-3 w-3" /> {t('threat.miningEconomics')}
                       </span>
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                          <span className="text-xs text-slate-400">Estimated Value</span>
+                          <span className="text-xs text-slate-400">{t('threat.estimatedValue')}</span>
                           <span className="text-sm font-bold text-emerald-400 font-mono">
                             ${formatNumber(ast.mining_economy.estimated_value_usd)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-xs text-slate-400">Difficulty</span>
+                          <span className="text-xs text-slate-400">{t('threat.difficulty')}</span>
                           <span className={`text-xs font-mono uppercase font-bold ${
                             ast.mining_economy.mining_difficulty === 'high' ? 'text-red-400' :
                             ast.mining_economy.mining_difficulty === 'medium' ? 'text-yellow-400' :
@@ -464,7 +460,7 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
                           </span>
                         </div>
                         <div>
-                          <span className="text-xs text-slate-400 block mb-1.5">Primary Materials</span>
+                          <span className="text-xs text-slate-400 block mb-1.5">{t('threat.primaryMaterials')}</span>
                           <div className="flex flex-wrap gap-1.5">
                             {ast.mining_economy.primary_materials.map(m => (
                               <span key={m} className="px-2 py-0.5 text-[10px] font-mono rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 uppercase">
@@ -479,7 +475,7 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
                     {/* AI Summary */}
                     <div className="p-4 rounded-xl border border-white/5 bg-black/20">
                       <span className="text-[9px] font-mono uppercase tracking-wider text-amber-400 block mb-3 flex items-center gap-1">
-                        <Atom className="h-3 w-3" /> AI Analysis (Llama 3.3)
+                        <Atom className="h-3 w-3" /> {t('threat.aiAnalysis')}
                       </span>
                       {desc ? (
                         <p className="text-xs text-slate-300 font-body leading-relaxed italic">
@@ -487,12 +483,12 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
                         </p>
                       ) : (
                         <p className="text-xs text-slate-500 font-mono">
-                          No AI analysis available for this object.
+                          {t('threat.noAiAnalysis')}
                         </p>
                       )}
                       {ast.close_approach_date && (
                         <div className="mt-3 pt-2 border-t border-white/5 text-[10px] font-mono text-slate-500">
-                          Close approach date: {ast.close_approach_date}
+                          {t('threat.closeApproachDate')}: {ast.close_approach_date}
                         </div>
                       )}
                     </div>
@@ -506,8 +502,8 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
 
       {/* Footer summary */}
       <div className="p-3 rounded-xl border border-white/5 bg-white/[0.01] text-[10px] font-mono text-slate-500 flex items-center justify-between">
-        <span>Data source: NASA NeoWs (Near-Earth Object Web Service) · Processed by SpaceFetch Go Worker</span>
-        <span className="text-accent">{asteroids.length} objects analyzed</span>
+        <span>{t('threat.dataSource')}</span>
+        <span className="text-accent">{asteroids.length} {t('threat.objectsAnalyzed')}</span>
       </div>
     </div>
   );
