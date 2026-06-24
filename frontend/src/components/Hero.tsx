@@ -1,8 +1,109 @@
-import { useRef, useEffect, Suspense } from 'react';
+import { useRef, useEffect, useState, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import AsteroidBelt from './AsteroidBelt';
+import RadarDetailsCard from './RadarDetailsCard';
+
+interface AsteroidData {
+  id: string;
+  name: string;
+  is_hazardous: boolean;
+  metrics: {
+    diameter_meters: number;
+    velocity_km_h: number;
+    miss_distance_km: number;
+  };
+  mining_economy: {
+    estimated_value_usd: number;
+    primary_materials: string[];
+    mining_difficulty: string;
+  };
+  ai_summary: {
+    en: string;
+    ru: string;
+  } | string;
+}
+
+const mockAsteroids: AsteroidData[] = [
+  {
+    id: "3724056",
+    name: "(2015 NG13)",
+    is_hazardous: false,
+    metrics: {
+      diameter_meters: 45.0,
+      velocity_km_h: 64186.3,
+      miss_distance_km: 63745553.1
+    },
+    mining_economy: {
+      estimated_value_usd: 4566651,
+      primary_materials: ["nickel", "iron"],
+      mining_difficulty: "low"
+    },
+    ai_summary: {
+      en: "Asteroid (2015 NG13) is a 45-meter space rock hurtling at 64,186 km/h. Packed with iron and nickel worth $4.5M.",
+      ru: "Астероид (2015 NG13) — 45-метровый космический камень, летящий со скоростью 64186 км/ч. Оценочная стоимость: $4.5 млн."
+    }
+  },
+  {
+    id: "99942",
+    name: "(99942 Apophis)",
+    is_hazardous: true,
+    metrics: {
+      diameter_meters: 370.0,
+      velocity_km_h: 110290.0,
+      miss_distance_km: 37900.0
+    },
+    mining_economy: {
+      estimated_value_usd: 87900000000,
+      primary_materials: ["nickel", "iron", "cobalt"],
+      mining_difficulty: "high"
+    },
+    ai_summary: {
+      en: "Apophis is a massive 370-meter asteroid. Extremely close flyby, packed with industrial cobalt and nickel worth $87.9B.",
+      ru: "Апофис — массивный 370-метровый астероид. Пролетит экстремально близко к Земле. Богат кобальтом на $87.9 млрд."
+    }
+  },
+  {
+    id: "101955",
+    name: "(101955 Bennu)",
+    is_hazardous: true,
+    metrics: {
+      diameter_meters: 490.0,
+      velocity_km_h: 101000.0,
+      miss_distance_km: 2030000.0
+    },
+    mining_economy: {
+      estimated_value_usd: 672000000000,
+      primary_materials: ["water", "platinum", "gold"],
+      mining_difficulty: "medium"
+    },
+    ai_summary: {
+      en: "Bennu is a major water and gold rich carbonaceous asteroid, containing reserves valued at $672B.",
+      ru: "Бенну — богатый водой и золотом углеродистый астероид. Запасы платины и золота оцениваются в $672 млрд."
+    }
+  },
+  {
+    id: "2026SF",
+    name: "(2026 SpaceFetch)",
+    is_hazardous: false,
+    metrics: {
+      diameter_meters: 95.0,
+      velocity_km_h: 42100.0,
+      miss_distance_km: 14200000.0
+    },
+    mining_economy: {
+      estimated_value_usd: 12500000,
+      primary_materials: ["silicates", "platinum"],
+      mining_difficulty: "low"
+    },
+    ai_summary: {
+      en: "A newly normalized target. Easy mining difficulty, containing silicates and platinum worth $12.5M.",
+      ru: "Вновь обнаруженный астероид. Низкая сложность освоения, содержит силикаты и платину на $12.5 млн."
+    }
+  }
+];
 
 function InteractiveEarth() {
   const outerGroupRef = useRef<THREE.Group>(null);
@@ -101,13 +202,27 @@ function InteractiveEarth() {
   );
 }
 
-function Scene() {
+interface SceneProps {
+  asteroids: AsteroidData[];
+  selectedId: string | null;
+  onSelectAsteroid: (asteroid: AsteroidData) => void;
+}
+
+function Scene({ asteroids, selectedId, onSelectAsteroid }: SceneProps) {
   return (
     <>
       <ambientLight intensity={0.6} />
       <directionalLight position={[5, 5, 5]} intensity={1.5} castShadow />
       <pointLight position={[-5, -5, -5]} intensity={0.5} color="#3B82F6" />
       <InteractiveEarth />
+      
+      {/* 3D Asteroid radar objects */}
+      <AsteroidBelt
+        asteroids={asteroids}
+        selectedId={selectedId}
+        onSelect={onSelectAsteroid}
+      />
+      
       <EffectComposer>
         <Bloom luminanceThreshold={0.15} luminanceSmoothing={0.8} height={300} opacity={0.8} />
       </EffectComposer>
@@ -121,6 +236,35 @@ interface HeroProps {
 }
 
 export default function Hero({ user, onOpenAuth }: HeroProps) {
+  const [asteroids, setAsteroids] = useState<AsteroidData[]>(mockAsteroids);
+  const [selectedAsteroid, setSelectedAsteroid] = useState<AsteroidData | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      // Fetch live normalizations from local Go backend API using user credentials
+      fetch('http://localhost:8080/v1/asteroids/today', {
+        headers: {
+          'X-API-Key': user.apiKey,
+        },
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error('CORS or backend connection failed');
+          return res.json();
+        })
+        .then((resData) => {
+          if (resData.status === 'success' && Array.isArray(resData.data) && resData.data.length > 0) {
+            setAsteroids(resData.data);
+          }
+        })
+        .catch((err) => {
+          console.warn('Backend server offline. Utilizing high-fidelity simulated asteroids.', err);
+          setAsteroids(mockAsteroids);
+        });
+    } else {
+      setAsteroids(mockAsteroids);
+    }
+  }, [user]);
+
   return (
     <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
       {/* 3D Canvas Background */}
@@ -134,7 +278,11 @@ export default function Hero({ user, onOpenAuth }: HeroProps) {
             camera={{ position: [0, 0, 6.5], fov: 45 }}
             gl={{ antialias: true, alpha: true }}
           >
-            <Scene />
+            <Scene
+              asteroids={asteroids}
+              selectedId={selectedAsteroid ? selectedAsteroid.id : null}
+              onSelectAsteroid={setSelectedAsteroid}
+            />
           </Canvas>
         </Suspense>
       </div>
@@ -202,6 +350,16 @@ export default function Hero({ user, onOpenAuth }: HeroProps) {
           </div>
         </motion.div>
       </div>
+
+      {/* Floating Asteroid Radar details sidebar */}
+      <AnimatePresence>
+        {selectedAsteroid && (
+          <RadarDetailsCard
+            asteroid={selectedAsteroid}
+            onClose={() => setSelectedAsteroid(null)}
+          />
+        )}
+      </AnimatePresence>
     </section>
   );
 }
