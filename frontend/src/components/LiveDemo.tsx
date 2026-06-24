@@ -97,7 +97,11 @@ function TypewriterResponse({ text }: { text: string }) {
   );
 }
 
-export default function LiveDemo() {
+interface LiveDemoProps {
+  user: { email: string; apiKey: string; tier: string } | null;
+}
+
+export default function LiveDemo({ user }: LiveDemoProps) {
   const [activeTab, setActiveTab] = useState<Dataset>("neows");
   const [copied, setCopied] = useState(false);
 
@@ -148,7 +152,7 @@ export default function LiveDemo() {
             <Terminal className="h-4 w-4 text-accent" />
             <span className="font-semibold text-accent font-mono">REQUEST:</span>
             <span className="text-slate-400 overflow-x-auto whitespace-nowrap scrollbar-none flex-1">
-              {demos[activeTab].request}
+              {demos[activeTab].request.replace('gsk_groq', user ? user.apiKey : 'gsk_groq')}
             </span>
           </div>
 

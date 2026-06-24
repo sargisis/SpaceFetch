@@ -115,7 +115,12 @@ function Scene() {
   );
 }
 
-export default function Hero() {
+interface HeroProps {
+  user: { email: string; apiKey: string; tier: string } | null;
+  onOpenAuth: (tab: 'login' | 'register') => void;
+}
+
+export default function Hero({ user, onOpenAuth }: HeroProps) {
   return (
     <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
       {/* 3D Canvas Background */}
@@ -159,14 +164,20 @@ export default function Hero() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <motion.a
-              href="#demo"
+            <motion.button
+              onClick={() => {
+                if (user) {
+                  document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  onOpenAuth('register');
+                }
+              }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-8 py-3.5 rounded-lg bg-primary hover:bg-blue-600 text-white font-semibold transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] border border-blue-400/20"
+              className="px-8 py-3.5 rounded-lg bg-primary hover:bg-blue-600 text-white font-semibold transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] border border-blue-400/20 cursor-pointer"
             >
-              Get Started Free
-            </motion.a>
+              {user ? "Go to Live Demo" : "Get Started Free"}
+            </motion.button>
             <motion.a
               href="#problem-solution"
               whileHover={{ scale: 1.05 }}
