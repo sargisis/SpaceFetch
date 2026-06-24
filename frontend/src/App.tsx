@@ -1,7 +1,6 @@
 import { Suspense, lazy, useState, useEffect } from 'react';
 import Header from './components/Header';
 import AuthModal from './components/AuthModal';
-import ConsoleModal from './components/ConsoleModal';
 import ProblemSolution from './components/ProblemSolution';
 import Features from './components/Features';
 import LiveDemo from './components/LiveDemo';
@@ -11,11 +10,12 @@ import Footer from './components/Footer';
 // Lazy load 3D heavy components for optimized load time
 const StarField = lazy(() => import('./components/StarField'));
 const Hero = lazy(() => import('./components/Hero'));
+const ConsolePage = lazy(() => import('./components/ConsolePage'));
 
 export default function App() {
   const [user, setUser] = useState<{ email: string; apiKey: string; tier: string } | null>(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [isConsoleOpen, setIsConsoleOpen] = useState(false);
+  const [view, setView] = useState<'landing' | 'console'>('landing');
   const [authTab, setAuthTab] = useState<'login' | 'register'>('login');
 
   useEffect(() => {
@@ -32,11 +32,13 @@ export default function App() {
   const handleLoginSuccess = (userData: { email: string; apiKey: string; tier: string }) => {
     setUser(userData);
     localStorage.setItem('sf_user', JSON.stringify(userData));
+    setView('console');
   };
 
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('sf_user');
+    setView('landing');
   };
 
   const handleOpenAuth = (tab: 'login' | 'register') => {
@@ -57,7 +59,8 @@ export default function App() {
           user={user} 
           onOpenAuth={handleOpenAuth} 
           onLogout={handleLogout} 
-          onOpenConsole={() => setIsConsoleOpen(true)} 
+          onOpenConsole={() => setView('console')} 
+          onGoHome={() => setView('landing')}
         />
 
         <Suspense fallback={
@@ -65,14 +68,19 @@ export default function App() {
             LOADING SPACE ENVIRONMENT...
           </div>
         }>
-          <Hero user={user} onOpenAuth={handleOpenAuth} />
+          {view === 'console' && user ? (
+            <ConsolePage user={user} onGoHome={() => setView('landing')} />
+          ) : (
+            <>
+              <Hero user={user} onOpenAuth={handleOpenAuth} />
+              <ProblemSolution />
+              <Features />
+              <LiveDemo user={user} />
+              <CTA user={user} onOpenAuth={handleOpenAuth} />
+              <Footer />
+            </>
+          )}
         </Suspense>
-
-        <ProblemSolution />
-        <Features />
-        <LiveDemo user={user} />
-        <CTA user={user} onOpenAuth={handleOpenAuth} />
-        <Footer />
       </div>
 
       <AuthModal
@@ -80,12 +88,6 @@ export default function App() {
         onClose={() => setIsAuthOpen(false)}
         defaultTab={authTab}
         onLoginSuccess={handleLoginSuccess}
-      />
-
-      <ConsoleModal
-        isOpen={isConsoleOpen}
-        onClose={() => setIsConsoleOpen(false)}
-        user={user}
       />
     </div>
   );

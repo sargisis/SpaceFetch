@@ -57,7 +57,7 @@ function SingleAsteroid({
     
     // Scale mesh based on physical diameter meters
     const diameter = asteroid.metrics?.diameter_meters || 50;
-    const scale = THREE.MathUtils.lerp(0.04, 0.14, Math.min(diameter / 250, 1.0));
+    const scale = THREE.MathUtils.lerp(0.12, 0.28, Math.min(diameter / 250, 1.0));
     
     return { radius, speed, startAngle, inclinationX, inclinationZ, scale };
   }, [index, asteroid]);
@@ -85,7 +85,7 @@ function SingleAsteroid({
         <meshBasicMaterial
           color={asteroid.is_hazardous ? '#EF4444' : '#22D3EE'}
           transparent={true}
-          opacity={isSelected ? 0.3 : hovered ? 0.18 : 0.05}
+          opacity={isSelected ? 0.4 : hovered ? 0.3 : 0.12}
           side={THREE.DoubleSide}
         />
       </mesh>
@@ -110,9 +110,9 @@ function SingleAsteroid({
       >
         <icosahedronGeometry args={[orbitParams.scale, 1]} />
         <meshStandardMaterial
-          color={isSelected ? '#FBBF24' : hovered ? '#22D3EE' : asteroid.is_hazardous ? '#EF4444' : '#A1A1AA'}
-          emissive={isSelected ? '#FBBF24' : hovered ? '#22D3EE' : asteroid.is_hazardous ? '#EF4444' : '#000000'}
-          emissiveIntensity={isSelected ? 1.4 : hovered ? 0.8 : asteroid.is_hazardous ? 0.5 : 0.0}
+          color={isSelected ? '#FBBF24' : hovered ? '#22D3EE' : asteroid.is_hazardous ? '#EF4444' : '#E2E8F0'}
+          emissive={isSelected ? '#FBBF24' : hovered ? '#22D3EE' : asteroid.is_hazardous ? '#EF4444' : '#22D3EE'}
+          emissiveIntensity={isSelected ? 1.4 : hovered ? 0.9 : asteroid.is_hazardous ? 0.6 : 0.25}
           flatShading={true}
           roughness={0.95}
           metalness={0.1}
