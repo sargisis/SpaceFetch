@@ -136,7 +136,13 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <motion.div
+          key="auth-modal-wrapper"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        >
           {/* Backdrop Blur overlay */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -381,7 +387,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
 
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );

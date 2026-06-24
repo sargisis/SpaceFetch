@@ -1,6 +1,7 @@
 import { Suspense, lazy, useState, useEffect } from 'react';
 import Header from './components/Header';
 import AuthModal from './components/AuthModal';
+import ConsoleModal from './components/ConsoleModal';
 import ProblemSolution from './components/ProblemSolution';
 import Features from './components/Features';
 import LiveDemo from './components/LiveDemo';
@@ -14,6 +15,7 @@ const Hero = lazy(() => import('./components/Hero'));
 export default function App() {
   const [user, setUser] = useState<{ email: string; apiKey: string; tier: string } | null>(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isConsoleOpen, setIsConsoleOpen] = useState(false);
   const [authTab, setAuthTab] = useState<'login' | 'register'>('login');
 
   useEffect(() => {
@@ -51,7 +53,12 @@ export default function App() {
 
       {/* Main Layout */}
       <div className="relative z-10">
-        <Header user={user} onOpenAuth={handleOpenAuth} onLogout={handleLogout} />
+        <Header 
+          user={user} 
+          onOpenAuth={handleOpenAuth} 
+          onLogout={handleLogout} 
+          onOpenConsole={() => setIsConsoleOpen(true)} 
+        />
 
         <Suspense fallback={
           <div className="flex h-screen w-full items-center justify-center text-accent/50 font-mono animate-pulse">
@@ -73,6 +80,12 @@ export default function App() {
         onClose={() => setIsAuthOpen(false)}
         defaultTab={authTab}
         onLoginSuccess={handleLoginSuccess}
+      />
+
+      <ConsoleModal
+        isOpen={isConsoleOpen}
+        onClose={() => setIsConsoleOpen(false)}
+        user={user}
       />
     </div>
   );

@@ -4,9 +4,10 @@ interface HeaderProps {
   user: { email: string; apiKey: string; tier: string } | null;
   onOpenAuth: (tab: 'login' | 'register') => void;
   onLogout: () => void;
+  onOpenConsole: () => void;
 }
 
-export default function Header({ user, onOpenAuth, onLogout }: HeaderProps) {
+export default function Header({ user, onOpenAuth, onLogout, onOpenConsole }: HeaderProps) {
   return (
     <header className="sticky top-0 left-0 right-0 z-50 w-full border-b border-white/5 bg-bg/60 backdrop-blur-md">
       <div className="container mx-auto px-6 h-16 flex items-center justify-between">
@@ -54,10 +55,18 @@ export default function Header({ user, onOpenAuth, onLogout }: HeaderProps) {
                 </span>
               </div>
 
+              {/* API Console */}
+              <button
+                onClick={onOpenConsole}
+                className="text-xs font-mono px-3 py-1.5 rounded-lg border border-accent/20 bg-accent/5 text-accent hover:bg-accent/10 transition-all cursor-pointer"
+              >
+                API Console
+              </button>
+
               {/* Log out */}
               <button
                 onClick={onLogout}
-                className="text-xs font-body text-slate-400 hover:text-white hover:underline transition-all"
+                className="text-xs font-body text-slate-400 hover:text-white hover:underline transition-all cursor-pointer"
               >
                 Log Out
               </button>
