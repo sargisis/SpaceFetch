@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -13,8 +14,9 @@ import (
 )
 
 type MongoDB struct {
-	client     *mongo.Client
-	collection *mongo.Collection
+	client    *mongo.Client
+	asteroids *mongo.Collection
+	users     *mongo.Collection
 }
 
 func NewMongoDB(uri, dbName string) (*MongoDB, error) {
@@ -30,8 +32,51 @@ func NewMongoDB(uri, dbName string) (*MongoDB, error) {
 		return nil, fmt.Errorf("mongo ping: %w", err)
 	}
 
-	collection := client.Database(dbName).Collection("asteroids")
-	return &MongoDB{client: client, collection: collection}, nil
+	asteroids := client.Database(dbName).Collection("asteroids")
+	users := client.Database(dbName).Collection("users")
+
+	// Ensure unique index on Email for User collection
+	_, err = users.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "email", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("mongo create index: %w", err)
+	}
+
+	return &MongoDB{
+		client:    client,
+		asteroids: asteroids,
+		users:     users,
+	}, nil
+}
+
+func (m *MongoDB) CreateUser(ctx context.Context, email, hashedKey, tier string) (*models.User, error) {
+	now := time.Now().UTC()
+	user := &models.User{
+		ID:           primitive.NewObjectID(),
+		Email:        email,
+		HashedAPIKey: hashedKey,
+		Tier:         tier,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+
+	_, err := m.users.InsertOne(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (m *MongoDB) GetUserByHashedKey(ctx context.Context, hashedKey string) (*models.User, error) {
+	var user models.User
+	err := m.users.FindOne(ctx, bson.M{"hashed_api_key": hashedKey}).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 func (m *MongoDB) UpsertAsteroids(ctx context.Context, asteroids []models.Asteroid) error {
@@ -47,13 +92,13 @@ func (m *MongoDB) UpsertAsteroids(ctx context.Context, asteroids []models.Astero
 			SetUpsert(true)
 	}
 
-	_, err := m.collection.BulkWrite(ctx, models)
+	_, err := m.asteroids.BulkWrite(ctx, models)
 	return err
 }
 
 func (m *MongoDB) GetTodayAsteroids(ctx context.Context) ([]models.Asteroid, error) {
 	today := time.Now().UTC().Format("2006-01-02")
-	cursor, err := m.collection.Find(ctx, bson.M{"close_approach_date": today})
+	cursor, err := m.asteroids.Find(ctx, bson.M{"close_approach_date": today})
 	if err != nil {
 		return nil, err
 	}

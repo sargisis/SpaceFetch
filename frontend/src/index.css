@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-bg text-bodyText font-body antialiased selection:bg-primary/30 selection:text-accent overflow-x-hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading text-white tracking-tight;
+  }
+}
+
+/* Glassmorphism utilities */
+.glass-panel {
+  @apply bg-glass-gradient border border-white/5 backdrop-blur-md rounded-xl shadow-glass;
+}
+
+.glass-panel-hover {
+  @apply transition-all duration-300 hover:shadow-glass-hover hover:border-primary/30;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #05070D;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3b82f6;
+}
+
+/* Glowing text animation (Problem/Solution messy json) */
+@keyframes textGlitch {
+  0%, 100% { opacity: 1; text-shadow: 0 0 2px rgba(34, 211, 238, 0.5); }
+  50% { opacity: 0.85; text-shadow: 0 0 6px rgba(34, 211, 238, 0.8), 0 0 10px rgba(59, 130, 246, 0.5); }
+}
+
+.animate-glitch {
+  animation: textGlitch 2s infinite ease-in-out;
+}

@@ -1,6 +1,9 @@
 package api
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -55,4 +58,71 @@ func (h *Handler) GetTodayAsteroids(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
+}
+
+func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+
+	var req models.UserRegisterRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if req.Email == "" {
+		writeError(w, http.StatusBadRequest, "email is required")
+		return
+	}
+
+	tier := req.Tier
+	if tier == "" {
+		tier = "free"
+	}
+	if tier != "free" && tier != "premium" {
+		writeError(w, http.StatusBadRequest, "invalid tier, must be 'free' or 'premium'")
+		return
+	}
+
+	apiKey, err := generateSecureAPIKey()
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to generate api key")
+		return
+	}
+
+	hashedKey := hashAPIKey(apiKey)
+
+	user, err := h.db.CreateUser(r.Context(), req.Email, hashedKey, tier)
+	if err != nil {
+		writeError(w, http.StatusConflict, "email already registered")
+		return
+	}
+
+	resp := models.UserRegisterResponse{
+		Status: "success",
+		Email:  user.Email,
+		APIKey: apiKey,
+		Tier:   user.Tier,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(resp)
+}
+
+// Helpers
+
+func generateSecureAPIKey() (string, error) {
+	bytes := make([]byte, 16)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return "sf_live_" + hex.EncodeToString(bytes), nil
+}
+
+func hashAPIKey(key string) string {
+	hash := sha256.Sum256([]byte(key))
+	return hex.EncodeToString(hash[:])
 }

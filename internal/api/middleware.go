@@ -9,49 +9,76 @@ import (
 	"time"
 
 	"github.com/sargisis/spacefetch/internal/cache"
+	"github.com/sargisis/spacefetch/internal/database"
 	"github.com/sargisis/spacefetch/internal/models"
 )
 
 type contextKey string
 
-const apiKeyCtx contextKey = "api_key"
+const (
+	apiKeyCtx contextKey = "api_key"
+	userCtx   contextKey = "user"
+)
 
-// Eventually this will check a users collection in MongoDB.
-// For MVP, any non-empty key is accepted.
-var validKeys = map[string]bool{}
+func AuthMiddleware(db *database.MongoDB, rcache *cache.RedisCache) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			key := r.Header.Get("X-API-Key")
+			if key == "" {
+				key = r.URL.Query().Get("api_key")
+			}
 
-func AuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		key := r.Header.Get("X-API-Key")
-		if key == "" {
-			key = r.URL.Query().Get("api_key")
-		}
+			if key == "" {
+				writeError(w, http.StatusUnauthorized, "missing X-API-Key header")
+				return
+			}
 
-		if key == "" {
-			writeError(w, http.StatusUnauthorized, "missing X-API-Key header")
-			return
-		}
+			hashedKey := hashAPIKey(key)
 
-		if len(validKeys) > 0 && !validKeys[key] {
-			writeError(w, http.StatusUnauthorized, "invalid API key")
-			return
-		}
+			// 1. Try Redis cache first
+			user, cached, err := rcache.GetUserCache(r.Context(), hashedKey)
+			if err != nil {
+				log.Printf("auth: redis cache error: %v", err)
+			}
 
-		ctx := context.WithValue(r.Context(), apiKeyCtx, key)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+			if !cached {
+				// 2. Cache miss — check MongoDB
+				user, err = db.GetUserByHashedKey(r.Context(), hashedKey)
+				if err != nil {
+					writeError(w, http.StatusUnauthorized, "invalid API key")
+					return
+				}
+
+				// 3. Set Redis cache for subsequent validation
+				if err := rcache.SetUserCache(r.Context(), hashedKey, user); err != nil {
+					log.Printf("auth: failed to cache user: %v", err)
+				}
+			}
+
+			ctx := context.WithValue(r.Context(), userCtx, user)
+			ctx = context.WithValue(ctx, apiKeyCtx, key)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }
 
 func RateLimitMiddleware(redisCache *cache.RedisCache) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			key, _ := r.Context().Value(apiKeyCtx).(string)
-			if key == "" {
-				writeError(w, http.StatusUnauthorized, "missing API key")
+			user, _ := r.Context().Value(userCtx).(*models.User)
+			if user == nil {
+				writeError(w, http.StatusUnauthorized, "missing user context")
 				return
 			}
 
-			allowed, err := redisCache.CheckRateLimit(r.Context(), key, 5, 1*time.Second)
+			// Tier-based limits
+			limit := 5
+			if user.Tier == "premium" {
+				limit = 50
+			}
+
+			// Rate limit based on user's unique email or hashed key
+			allowed, err := redisCache.CheckRateLimit(r.Context(), user.Email, limit, 1*time.Second)
 			if err != nil {
 				log.Printf("rate limit error: %v", err)
 				writeError(w, http.StatusTooManyRequests, "rate limit exceeded")
@@ -63,7 +90,7 @@ func RateLimitMiddleware(redisCache *cache.RedisCache) func(http.Handler) http.H
 				return
 			}
 
-			next.ServeHTTP(w, r.WithContext(r.Context()))
+			next.ServeHTTP(w, r)
 		})
 	}
 }
@@ -80,7 +107,7 @@ func writeError(w http.ResponseWriter, status int, message string) {
 func CORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "X-API-Key, Content-Type")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
