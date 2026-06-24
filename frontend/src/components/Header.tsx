@@ -5,14 +5,22 @@ interface HeaderProps {
   onOpenAuth: (tab: 'login' | 'register') => void;
   onLogout: () => void;
   onOpenConsole: () => void;
+  onGoHome?: () => void;
 }
 
-export default function Header({ user, onOpenAuth, onLogout, onOpenConsole }: HeaderProps) {
+export default function Header({ user, onOpenAuth, onLogout, onOpenConsole, onGoHome }: HeaderProps) {
   return (
     <header className="sticky top-0 left-0 right-0 z-50 w-full border-b border-white/5 bg-bg/60 backdrop-blur-md">
       <div className="container mx-auto px-6 h-16 flex items-center justify-between">
         {/* Brand Logo */}
-        <a href="#" className="flex items-center gap-2 group">
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            if (onGoHome) onGoHome();
+          }}
+          className="flex items-center gap-2 group"
+        >
           <span className="font-heading text-lg font-bold text-white tracking-wider uppercase transition-colors group-hover:text-accent">
             Space<span className="text-accent group-hover:text-white">Fetch</span>
           </span>
