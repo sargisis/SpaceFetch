@@ -143,7 +143,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            className="absolute inset-0 bg-black/85"
           />
 
           {/* Glowing outer gradient border */}
@@ -159,7 +159,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
             <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-accent/20 rounded-full blur-3xl pointer-events-none" />
 
             {/* Main Modal body */}
-            <div className="bg-[#070b19]/90 backdrop-blur-2xl p-8 rounded-2xl relative">
+            <div className="bg-[#070b19]/95 p-8 rounded-2xl relative">
               
               {/* Close Button */}
               <button
@@ -248,7 +248,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
                         placeholder="sf_live_..."
                         value={apiKeyInput}
                         onChange={(e) => setApiKeyInput(e.target.value)}
-                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10.5 pr-4 text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-accent transition-all"
+                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-accent transition-all"
                       />
                     </div>
                   </div>
@@ -262,7 +262,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
                         placeholder="your@email.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10.5 pr-4 text-sm font-body text-white placeholder-slate-600 focus:outline-none focus:border-accent transition-all"
+                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-body text-white placeholder-slate-600 focus:outline-none focus:border-accent transition-all"
                       />
                     </div>
                   </div>
@@ -290,7 +290,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
                         placeholder="your@email.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10.5 pr-4 text-sm font-body text-white placeholder-slate-600 focus:outline-none focus:border-accent transition-all"
+                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-body text-white placeholder-slate-600 focus:outline-none focus:border-accent transition-all"
                       />
                     </div>
                   </div>
@@ -322,7 +322,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
                         placeholder="your@email.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10.5 pr-4 text-sm font-body text-white placeholder-slate-600 focus:outline-none focus:border-accent transition-all"
+                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-body text-white placeholder-slate-600 focus:outline-none focus:border-accent transition-all"
                       />
                     </div>
                   </div>
