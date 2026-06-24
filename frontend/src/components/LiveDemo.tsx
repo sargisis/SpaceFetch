@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Terminal, Copy, Check } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const demos = {
   neows: {
@@ -102,6 +103,7 @@ interface LiveDemoProps {
 }
 
 export default function LiveDemo({ user }: LiveDemoProps) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<Dataset>("neows");
   const [copied, setCopied] = useState(false);
 
@@ -115,11 +117,11 @@ export default function LiveDemo({ user }: LiveDemoProps) {
     <section id="demo" className="py-24 bg-bg/30 relative">
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold font-heading mb-4">
-            Try It in Real-Time
+          <h2 className="text-3xl md:text-5xl font-bold font-heading mb-4 text-white">
+            {t('demo.title')}
           </h2>
           <p className="text-slate-400 font-body font-light">
-            Select a dataset below to execute a simulated SpaceFetch API request and witness the normalized output stream back.
+            {t('demo.subtitle')}
           </p>
         </div>
 
@@ -142,7 +144,7 @@ export default function LiveDemo({ user }: LiveDemoProps) {
                     : "text-slate-400 hover:text-white border border-transparent"
                 }`}
               >
-                {tab === "neows" ? "NeoWs (Asteroids)" : tab === "apod" ? "APOD (Daily Image)" : "EPIC (Earth)"}
+                {tab === "neows" ? t('demo.neowsTab') : tab === "apod" ? t('demo.apodTab') : t('demo.epicTab')}
               </button>
             ))}
           </div>

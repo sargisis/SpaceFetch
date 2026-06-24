@@ -14,6 +14,7 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface AsteroidData {
   id: string;
@@ -44,6 +45,7 @@ type Tab = 'space' | 'credentials' | 'logs' | 'docs';
 type SnippetTab = 'curl' | 'js' | 'python' | 'go' | 'rust' | 'cpp';
 
 export default function ConsolePage({ user, onGoHome }: ConsolePageProps) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<Tab>('space');
 
   // Space Observatories states
@@ -250,7 +252,7 @@ int main() {
         <div className="p-6 border-b border-white/5 flex items-center gap-2">
           <Cpu className="h-5 w-5 text-accent animate-pulse" />
           <span className="font-heading font-bold text-white tracking-wider uppercase text-sm">
-            Control Console
+            {t('console.controlConsole')}
           </span>
         </div>
 
@@ -265,7 +267,7 @@ int main() {
             }`}
           >
             <Globe className="h-4 w-4 shrink-0" />
-            Space Observatories
+            {t('console.spaceObservatories')}
           </button>
 
           <button
@@ -277,7 +279,7 @@ int main() {
             }`}
           >
             <Key className="h-4 w-4 shrink-0" />
-            API Credentials
+            {t('console.apiCredentials')}
           </button>
 
           <button
@@ -289,7 +291,7 @@ int main() {
             }`}
           >
             <Terminal className="h-4 w-4 shrink-0" />
-            Live Logs
+            {t('console.liveLogs')}
           </button>
 
           <button
@@ -301,7 +303,7 @@ int main() {
             }`}
           >
             <BookOpen className="h-4 w-4 shrink-0" />
-            API Reference
+            {t('console.apiReference')}
           </button>
         </nav>
 
@@ -311,7 +313,7 @@ int main() {
             onClick={onGoHome}
             className="w-full py-2.5 rounded-lg border border-white/10 hover:bg-white/5 text-slate-300 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer text-center block"
           >
-            Return to Landing
+            {t('console.returnToLanding')}
           </button>
         </div>
       </aside>
@@ -322,13 +324,13 @@ int main() {
         {activeTab === 'space' && (
           <div className="space-y-6">
             <div className="border-b border-white/5 pb-4">
-              <h2 className="text-2xl font-bold font-heading text-white">Space Observatories Feed</h2>
-              <p className="text-xs text-slate-400 mt-1">Live data streams processed from NASA and enriched via Llama-3.3.</p>
+              <h2 className="text-2xl font-bold font-heading text-white">{t('console.spaceFeedTitle')}</h2>
+              <p className="text-xs text-slate-400 mt-1">{t('console.spaceFeedSubtitle')}</p>
             </div>
 
             {loadingSpace ? (
               <div className="flex h-[350px] w-full items-center justify-center text-accent/50 font-mono animate-pulse">
-                SYNCING ACTIVE COSMIC TELEMETRY...
+                {t('hero.activeTelemetry')}
               </div>
             ) : (
               <div className="space-y-6">
@@ -340,7 +342,7 @@ int main() {
                     <div>
                       <div className="flex items-center gap-2 mb-3">
                         <ImageIcon className="h-4 w-4 text-accent" />
-                        <span className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">NASA Image of the Day (APOD)</span>
+                        <span className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">{t('console.apodTitle')}</span>
                       </div>
                       {apod?.url ? (
                         <div className="rounded-xl overflow-hidden max-h-[220px] border border-white/10 mb-4 bg-black">
@@ -367,7 +369,7 @@ int main() {
                     <div>
                       <div className="flex items-center gap-2 mb-3">
                         <Camera className="h-4 w-4 text-accent animate-pulse" />
-                        <span className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">DSCOVR Satellite Live Camera (EPIC)</span>
+                        <span className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">{t('console.epicTitle')}</span>
                       </div>
                       {epic?.imgUrl ? (
                         <div className="rounded-xl overflow-hidden max-h-[220px] border border-white/10 mb-4 bg-black flex items-center justify-center p-2">
@@ -380,12 +382,12 @@ int main() {
                       )}
                       <h4 className="text-sm font-bold text-white leading-snug">Full-Disk Color Earth Photograph</h4>
                       <p className="text-xs text-slate-400 leading-relaxed font-light mt-2">
-                        Taken by the EPIC camera on the DSCOVR satellite at Lagrange Point 1 (1.5 million km away).
+                        {t('console.epicDescription')}
                       </p>
                     </div>
                     <div className="text-[10px] font-mono text-slate-500 border-t border-white/5 pt-2 mt-4 flex justify-between">
-                      <span>Coordinates: Lat {epic?.lat?.toFixed(2) || '0.00'}°, Lon {epic?.lon?.toFixed(2) || '0.00'}°</span>
-                      <span>Capture Time: {epic?.date ? new Date(epic.date).toLocaleTimeString() : 'N/A'}</span>
+                      <span>{t('console.epicCoordinates')}: Lat {epic?.lat?.toFixed(2) || '0.00'}°, Lon {epic?.lon?.toFixed(2) || '0.00'}°</span>
+                      <span>{t('console.epicTime')}: {epic?.date ? new Date(epic.date).toLocaleTimeString() : 'N/A'}</span>
                     </div>
                   </div>
 
@@ -395,25 +397,25 @@ int main() {
                 <div className="glass-panel p-5 bg-[#060810]/40">
                   <div className="flex items-center gap-2 mb-4">
                     <Sparkles className="h-4 w-4 text-accent" />
-                    <span className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">Today's Near-Earth Asteroid Log (NeoWs)</span>
+                    <span className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">{t('console.neowsTitle')}</span>
                   </div>
 
                   {asteroids.length === 0 ? (
                     <div className="p-6 text-center text-slate-500 text-xs font-mono">
-                      No asteroids recorded today. Space environment secure.
+                      {t('console.neowsEmpty')}
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="border-b border-white/5 font-mono text-[9px] text-slate-400 uppercase">
-                            <th className="py-2.5">Name</th>
-                            <th className="py-2.5">Alert Level</th>
-                            <th className="py-2.5">Diameter</th>
-                            <th className="py-2.5">Speed</th>
-                            <th className="py-2.5">Miss Distance</th>
-                            <th className="py-2.5">Estimated Value</th>
-                            <th className="py-2.5 text-right">Details</th>
+                            <th className="py-2.5">{t('console.colName')}</th>
+                            <th className="py-2.5">{t('console.colAlert')}</th>
+                            <th className="py-2.5">{t('console.colDiameter')}</th>
+                            <th className="py-2.5">{t('console.colSpeed')}</th>
+                            <th className="py-2.5">{t('console.colMissDistance')}</th>
+                            <th className="py-2.5">{t('console.colValue')}</th>
+                            <th className="py-2.5 text-right">{t('console.colDetails')}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5 font-mono text-xs">
@@ -441,10 +443,10 @@ int main() {
                                   </td>
                                   <td className="py-3 text-right">
                                     <button
-                                      onClick={() => setSelectedAstId(isSelected ? null : ast.id)}
-                                      className="text-[10px] px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/5 cursor-pointer"
+                                       onClick={() => setSelectedAstId(isSelected ? null : ast.id)}
+                                       className="text-[10px] px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/5 cursor-pointer"
                                     >
-                                      {isSelected ? 'Collapse' : 'Analyze'}
+                                      {isSelected ? t('console.detailsCollapse') : t('console.detailsAnalyze')}
                                     </button>
                                   </td>
                                 </tr>
@@ -455,7 +457,7 @@ int main() {
                                     <td colSpan={7} className="py-4 px-6 bg-black/40 text-xs font-body leading-relaxed text-slate-300">
                                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                          <span className="text-[9px] text-accent font-semibold tracking-wider font-mono uppercase block mb-1">Primary Materials</span>
+                                          <span className="text-[9px] text-accent font-semibold tracking-wider font-mono uppercase block mb-1">{t('console.detailsMaterials')}</span>
                                           <div className="flex gap-1.5">
                                             {ast.mining_economy.primary_materials.map((m) => (
                                               <span key={m} className="px-1.5 py-0.5 text-[10px] font-mono rounded bg-blue-500/10 text-blue-300 border border-blue-500/25 uppercase">
@@ -463,13 +465,13 @@ int main() {
                                               </span>
                                             ))}
                                           </div>
-                                          <span className="text-[9px] text-accent font-semibold tracking-wider font-mono uppercase block mt-3 mb-1">Difficulty Status</span>
-                                          <span className="text-xs uppercase font-mono text-slate-200">🔨 Mining Difficulty: {ast.mining_economy.mining_difficulty}</span>
+                                          <span className="text-[9px] text-accent font-semibold tracking-wider font-mono uppercase block mt-3 mb-1">{t('console.detailsDifficulty')}</span>
+                                          <span className="text-xs uppercase font-mono text-slate-200">🔨 {ast.mining_economy.mining_difficulty}</span>
                                         </div>
                                         <div className="border-t md:border-t-0 md:border-l border-white/5 pt-3 md:pt-0 md:pl-4">
                                           <span className="text-[9px] text-amber-400 font-semibold tracking-wider font-mono uppercase flex items-center gap-1 mb-1">
                                             <Sparkles className="h-3 w-3 text-amber-400" />
-                                            Llama AI Interpretation
+                                            {t('console.detailsInterpretation')}
                                           </span>
                                           <p className="font-light italic text-slate-400 leading-normal">
                                             "{desc}"
@@ -496,28 +498,28 @@ int main() {
         {activeTab === 'credentials' && (
           <div className="space-y-6 max-w-3xl">
             <div className="border-b border-white/5 pb-4">
-              <h2 className="text-2xl font-bold font-heading text-white">Developer API Key</h2>
-              <p className="text-xs text-slate-400 mt-1">Use this key to authorize all requests to the SpaceFetch server.</p>
+              <h2 className="text-2xl font-bold font-heading text-white">{t('console.credentialsTitle')}</h2>
+              <p className="text-xs text-slate-400 mt-1">{t('console.credentialsSubtitle')}</p>
             </div>
 
             {/* Profile info card */}
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 rounded-xl border border-white/5 bg-white/[0.01]">
-                <span className="text-[10px] text-slate-400 font-mono block uppercase">Account Email</span>
+                <span className="text-[10px] text-slate-400 font-mono block uppercase">{t('console.emailLabel')}</span>
                 <span className="text-sm font-semibold text-white font-body truncate block mt-1">{user.email}</span>
               </div>
               <div className="p-4 rounded-xl border border-white/5 bg-white/[0.01]">
-                <span className="text-[10px] text-slate-400 font-mono block uppercase">API Access Tier</span>
+                <span className="text-[10px] text-slate-400 font-mono block uppercase">{t('console.tierLabel')}</span>
                 <span className="text-sm font-semibold text-accent font-mono uppercase flex items-center gap-1.5 mt-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
-                  {user.tier} Plan (5 req/s)
+                  {user.tier} (5 req/s)
                 </span>
               </div>
             </div>
 
             {/* API Key Box */}
             <div className="space-y-1.5">
-              <label className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">Your Access Key</label>
+              <label className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">{t('console.keyLabel')}</label>
               <div className="p-4 rounded-xl border border-accent/20 bg-accent/5 flex items-center justify-between font-mono text-xs text-accent shadow-[inset_0_1px_15px_rgba(34,211,238,0.05)]">
                 <span className="truncate mr-4 font-semibold select-all">
                   {showKey ? user.apiKey : `sf_live_${'•'.repeat(24)}`}
@@ -544,7 +546,7 @@ int main() {
             {/* Quick Integration code blocks */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">Quick Integration Snippet</label>
+                <label className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">{t('console.snippetLabel')}</label>
                 
                 {/* Tabs */}
                 <div className="flex gap-1 bg-black/40 border border-white/5 p-0.5 rounded-lg overflow-x-auto max-w-[200px] sm:max-w-none scrollbar-none">
@@ -573,7 +575,7 @@ int main() {
                 <button
                   onClick={handleCopySnippet}
                   className="absolute top-3 right-3 p-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer z-10"
-                  title="Copy Code Snippet"
+                  title={t('console.snippetTooltip')}
                 >
                   {copiedSnippet ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
                 </button>
@@ -587,7 +589,7 @@ int main() {
             <div className="p-3.5 rounded-xl border border-amber-500/10 bg-amber-500/[0.02] text-[11px] text-amber-300/80 font-body leading-relaxed flex gap-2.5">
               <ShieldAlert className="h-4.5 w-4.5 shrink-0 mt-0.5 text-amber-500" />
               <span>
-                Keep your API key private. Do not commit it to public GitHub repositories or expose it in client-side production environments.
+                {t('console.credentialsWarning')}
               </span>
             </div>
           </div>
@@ -597,8 +599,8 @@ int main() {
         {activeTab === 'logs' && (
           <div className="space-y-6">
             <div className="border-b border-white/5 pb-4">
-              <h2 className="text-2xl font-bold font-heading text-white font-semibold">Live System Logs</h2>
-              <p className="text-xs text-slate-400 mt-1">Real-time developer API request stream from global servers.</p>
+              <h2 className="text-2xl font-bold font-heading text-white font-semibold">{t('console.logsTitle')}</h2>
+              <p className="text-xs text-slate-400 mt-1">{t('console.logsSubtitle')}</p>
             </div>
 
             {/* Logs terminal shell */}
@@ -633,15 +635,15 @@ int main() {
         {activeTab === 'docs' && (
           <div className="space-y-8 max-w-3xl">
             <div className="border-b border-white/5 pb-4">
-              <h2 className="text-2xl font-bold font-heading text-white">API Reference Documentation</h2>
-              <p className="text-xs text-slate-400 mt-1">Overview of the unified NASA developer endpoints.</p>
+              <h2 className="text-2xl font-bold font-heading text-white">{t('console.docsTitle')}</h2>
+              <p className="text-xs text-slate-400 mt-1">{t('console.docsSubtitle')}</p>
             </div>
 
             {/* General authorization info */}
             <div className="p-4 rounded-xl border border-white/5 bg-white/[0.01] space-y-2">
-              <h4 className="text-xs font-mono font-semibold uppercase text-accent">Authorization Header</h4>
+              <h4 className="text-xs font-mono font-semibold uppercase text-accent">{t('console.docsAuthTitle')}</h4>
               <p className="text-xs text-slate-300 font-body leading-relaxed font-light">
-                All requests must carry your key either in the header `X-API-Key` or as a query parameter `?api_key=`.
+                {t('console.docsAuthDesc')}
               </p>
             </div>
 
@@ -655,7 +657,7 @@ int main() {
                   <span className="text-xs font-mono font-semibold text-white">/v1/asteroids/today</span>
                 </div>
                 <p className="text-xs text-slate-400 font-body font-light">
-                  Retrieves a list of all asteroids passing close to Earth today, mapped to estimated dollar worth, material components, and a Llama-3.3 generated translation/summary.
+                  {t('console.docsEndpoint1Title')}
                 </p>
                 <div className="p-3 rounded-lg bg-black/40 border border-white/5 text-[10px] font-mono text-slate-400">
                   <span className="text-slate-500">Query Parameters:</span>
@@ -672,7 +674,7 @@ int main() {
                   <span className="text-xs font-mono font-semibold text-white">/v1/apod</span>
                 </div>
                 <p className="text-xs text-slate-400 font-body font-light">
-                  Returns the NASA Astronomy Picture of the Day, including high-res media links, capture metadata, and AI translations of the scientific observations.
+                  {t('console.docsEndpoint2Title')}
                 </p>
               </div>
 
@@ -683,7 +685,7 @@ int main() {
                   <span className="text-xs font-mono font-semibold text-white">/v1/epic/latest</span>
                 </div>
                 <p className="text-xs text-slate-400 font-body font-light">
-                  Fetches the latest full-disk color satellite photos of Earth captured by the EPIC camera on DSCOVR, together with geo-centroid coordinates.
+                  {t('console.docsEndpoint3Title')}
                 </p>
               </div>
 

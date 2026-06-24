@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface CTAProps {
   user: { email: string; apiKey: string; tier: string } | null;
@@ -6,6 +7,8 @@ interface CTAProps {
 }
 
 export default function CTA({ user, onOpenAuth }: CTAProps) {
+  const { t } = useLanguage();
+
   return (
     <section className="py-24 relative overflow-hidden">
       {/* Background glow circle */}
@@ -19,11 +22,11 @@ export default function CTA({ user, onOpenAuth }: CTAProps) {
           transition={{ duration: 0.6 }}
           className="max-w-3xl mx-auto glass-panel p-12 border border-white/5 bg-gradient-to-b from-white/[0.03] to-transparent shadow-2xl"
         >
-          <h2 className="text-3xl md:text-5xl font-bold font-heading mb-6">
-            Ready to explore?
+          <h2 className="text-3xl md:text-5xl font-bold font-heading mb-6 text-white">
+            {t('cta.title')}
           </h2>
           <p className="text-slate-400 font-body font-light mb-8 max-w-xl mx-auto leading-relaxed">
-            Get started with our free tier today. Access clean, structured space data and generate descriptions powered by Llama-3.3 in seconds.
+            {t('cta.subtitle')}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -39,7 +42,7 @@ export default function CTA({ user, onOpenAuth }: CTAProps) {
               whileTap={{ scale: 0.95 }}
               className="px-8 py-3.5 rounded-lg bg-primary hover:bg-blue-600 text-white font-semibold transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] border border-blue-400/20 cursor-pointer"
             >
-              {user ? "Go to Live Demo" : "Sign Up Now"}
+              {user ? t('hero.demoButton') : t('cta.button')}
             </motion.button>
             <motion.a
               href="https://github.com/sargisis/SpaceFetch"
@@ -49,7 +52,7 @@ export default function CTA({ user, onOpenAuth }: CTAProps) {
               whileTap={{ scale: 0.95 }}
               className="px-8 py-3.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 font-semibold border border-white/10 backdrop-blur-md transition-all"
             >
-              View Repository
+              {t('cta.viewRepo')}
             </motion.a>
           </div>
         </motion.div>

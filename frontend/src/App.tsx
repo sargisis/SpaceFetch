@@ -6,6 +6,7 @@ import Features from './components/Features';
 import LiveDemo from './components/LiveDemo';
 import CTA from './components/CTA';
 import Footer from './components/Footer';
+import { LanguageProvider } from './i18n/LanguageContext';
 
 // Lazy load 3D heavy components for optimized load time
 const StarField = lazy(() => import('./components/StarField'));
@@ -47,48 +48,50 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen text-slate-200">
-      {/* 3D Starfield Background */}
-      <Suspense fallback={null}>
-        <StarField />
-      </Suspense>
-
-      {/* Main Layout */}
-      <div className="relative z-10">
-        <Header 
-          user={user} 
-          onOpenAuth={handleOpenAuth} 
-          onLogout={handleLogout} 
-          onOpenConsole={() => setView('console')} 
-          onGoHome={() => setView('landing')}
-        />
-
-        <Suspense fallback={
-          <div className="flex h-screen w-full items-center justify-center text-accent/50 font-mono animate-pulse">
-            LOADING SPACE ENVIRONMENT...
-          </div>
-        }>
-          {view === 'console' && user ? (
-            <ConsolePage user={user} onGoHome={() => setView('landing')} />
-          ) : (
-            <>
-              <Hero user={user} onOpenAuth={handleOpenAuth} />
-              <ProblemSolution />
-              <Features />
-              <LiveDemo user={user} />
-              <CTA user={user} onOpenAuth={handleOpenAuth} />
-              <Footer />
-            </>
-          )}
+    <LanguageProvider>
+      <div className="relative min-h-screen text-slate-200">
+        {/* 3D Starfield Background */}
+        <Suspense fallback={null}>
+          <StarField />
         </Suspense>
-      </div>
 
-      <AuthModal
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-        defaultTab={authTab}
-        onLoginSuccess={handleLoginSuccess}
-      />
-    </div>
+        {/* Main Layout */}
+        <div className="relative z-10">
+          <Header 
+            user={user} 
+            onOpenAuth={handleOpenAuth} 
+            onLogout={handleLogout} 
+            onOpenConsole={() => setView('console')} 
+            onGoHome={() => setView('landing')}
+          />
+
+          <Suspense fallback={
+            <div className="flex h-screen w-full items-center justify-center text-accent/50 font-mono animate-pulse">
+              LOADING SPACE ENVIRONMENT...
+            </div>
+          }>
+            {view === 'console' && user ? (
+              <ConsolePage user={user} onGoHome={() => setView('landing')} />
+            ) : (
+              <>
+                <Hero user={user} onOpenAuth={handleOpenAuth} />
+                <ProblemSolution />
+                <Features />
+                <LiveDemo user={user} />
+                <CTA user={user} onOpenAuth={handleOpenAuth} />
+                <Footer />
+              </>
+            )}
+          </Suspense>
+        </div>
+
+        <AuthModal
+          isOpen={isAuthOpen}
+          onClose={() => setIsAuthOpen(false)}
+          defaultTab={authTab}
+          onLoginSuccess={handleLoginSuccess}
+        />
+      </div>
+    </LanguageProvider>
   );
 }
