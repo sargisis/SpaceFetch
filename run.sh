@@ -2,16 +2,34 @@
 
 MODE=${1:-docker}
 
+# Detect if Docker Compose is available
+if docker compose version >/dev/null 2>&1; then
+    COMPOSE_CMD="docker compose"
+elif docker-compose version >/dev/null 2>&1; then
+    COMPOSE_CMD="docker-compose"
+else
+    COMPOSE_CMD=""
+fi
+
 if [ "$MODE" = "docker" ]; then
-    echo "=== Starting SpaceFetch via Docker ==="
-    # Try running docker compose up
-    if docker compose up --build; then
-        echo "Containers started successfully."
+    if [ -z "$COMPOSE_CMD" ]; then
+        echo "⚠️ Docker Compose was not found on your system."
+        echo "🔄 Falling back to local execution mode (Go backend + React frontend)..."
+        MODE="local"
     else
-        echo "Failed to run docker compose without privileges. Trying with sudo..."
-        sudo docker compose up --build
+        echo "=== Starting SpaceFetch via Docker ($COMPOSE_CMD) ==="
+        if $COMPOSE_CMD up --build; then
+            echo "Containers started successfully."
+            exit 0
+        else
+            echo "Failed to run compose. Trying with sudo..."
+            sudo $COMPOSE_CMD up --build
+            exit 0
+        fi
     fi
-elif [ "$MODE" = "local" ]; then
+fi
+
+if [ "$MODE" = "local" ]; then
     echo "=== Starting SpaceFetch locally ==="
     
     # Load env
