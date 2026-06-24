@@ -57,6 +57,33 @@ func (r *RedisCache) Set(ctx context.Context, asteroids []models.Asteroid) error
 	return r.cli.Set(ctx, asteroidsKey, data, r.ttl).Err()
 }
 
+func (r *RedisCache) SetUserCache(ctx context.Context, hashedKey string, user *models.User) error {
+	data, err := json.Marshal(user)
+	if err != nil {
+		return err
+	}
+	key := fmt.Sprintf("user:%s", hashedKey)
+	return r.cli.Set(ctx, key, data, 5*time.Minute).Err()
+}
+
+func (r *RedisCache) GetUserCache(ctx context.Context, hashedKey string) (*models.User, bool, error) {
+	key := fmt.Sprintf("user:%s", hashedKey)
+	data, err := r.cli.Get(ctx, key).Bytes()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, false, nil
+		}
+		return nil, false, err
+	}
+
+	var user models.User
+	if err := json.Unmarshal(data, &user); err != nil {
+		return nil, false, err
+	}
+
+	return &user, true, nil
+}
+
 func (r *RedisCache) Close() error {
 	return r.cli.Close()
 }
