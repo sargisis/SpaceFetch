@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, Fragment } from 'react';
+import { useState, useEffect, useRef, Fragment, lazy, Suspense } from 'react';
 import {
   Cpu,
   Key,
@@ -15,6 +15,7 @@ import {
   EyeOff
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
+const ThreatDashboard = lazy(() => import('./ThreatDashboard'));
 
 interface AsteroidData {
   id: string;
@@ -41,7 +42,7 @@ interface ConsolePageProps {
   onGoHome: () => void;
 }
 
-type Tab = 'space' | 'credentials' | 'logs' | 'docs';
+type Tab = 'space' | 'threat' | 'credentials' | 'logs' | 'docs';
 type SnippetTab = 'curl' | 'js' | 'python' | 'go' | 'rust' | 'cpp';
 
 export default function ConsolePage({ user, onGoHome }: ConsolePageProps) {
@@ -69,7 +70,7 @@ export default function ConsolePage({ user, onGoHome }: ConsolePageProps) {
 
   // Fetch Space Feed data from real NASA APIs & Local API
   useEffect(() => {
-    if (activeTab !== 'space') return;
+    if (activeTab !== 'space' && activeTab !== 'threat') return;
 
     setLoadingSpace(true);
     // 1. Fetch APOD (NASA Daily Image)
@@ -268,6 +269,18 @@ int main() {
           >
             <Globe className="h-4 w-4 shrink-0" />
             {t('console.spaceObservatories')}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('threat')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer ${
+              activeTab === 'threat'
+                ? 'bg-primary/20 text-accent border border-accent/20'
+                : 'text-slate-400 hover:text-white border border-transparent'
+            }`}
+          >
+            <ShieldAlert className="h-4 w-4 shrink-0" />
+            Threat Dashboard
           </button>
 
           <button
@@ -492,6 +505,17 @@ int main() {
               </div>
             )}
           </div>
+        )}
+
+        {/* THREAT DASHBOARD TAB */}
+        {activeTab === 'threat' && (
+          <Suspense fallback={
+            <div className="flex h-[350px] w-full items-center justify-center text-accent/50 font-mono animate-pulse">
+              LOADING THREAT MATRIX...
+            </div>
+          }>
+            <ThreatDashboard asteroids={asteroids} loading={loadingSpace} />
+          </Suspense>
         )}
 
         {/* API CREDENTIALS TAB */}

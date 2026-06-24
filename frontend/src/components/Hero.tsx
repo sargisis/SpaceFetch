@@ -297,13 +297,6 @@ export default function Hero({ user, onOpenAuth }: HeroProps) {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="max-w-4xl"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-blue-500/20 bg-blue-500/5 mb-6 backdrop-blur-md">
-            <span className="h-2 w-2 rounded-full bg-accent animate-ping" />
-            <span className="text-xs font-mono tracking-wider uppercase text-accent font-semibold">
-              {t('hero.badge')}
-            </span>
-          </div>
-
           <h1 className="text-5xl md:text-7xl font-bold font-heading mb-6 bg-gradient-to-r from-white via-slate-100 to-blue-400 bg-clip-text text-transparent leading-none">
             {t('hero.title')}
           </h1>
