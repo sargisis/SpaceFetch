@@ -46,7 +46,7 @@ type Tab = 'space' | 'threat' | 'credentials' | 'logs' | 'docs';
 type SnippetTab = 'curl' | 'js' | 'python' | 'go' | 'rust' | 'cpp';
 
 export default function ConsolePage({ user, onGoHome }: ConsolePageProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<Tab>('space');
 
   // Space Observatories states
@@ -280,7 +280,7 @@ int main() {
             }`}
           >
             <ShieldAlert className="h-4 w-4 shrink-0" />
-            Threat Dashboard
+            {t('console.threatDashboard')}
           </button>
 
           <button
@@ -434,7 +434,7 @@ int main() {
                         <tbody className="divide-y divide-white/5 font-mono text-xs">
                           {asteroids.map((ast) => {
                             const isSelected = selectedAstId === ast.id;
-                            const desc = typeof ast.ai_summary === 'object' ? ast.ai_summary.ru || ast.ai_summary.en : ast.ai_summary;
+                            const desc = typeof ast.ai_summary === 'object' ? (ast.ai_summary[language as keyof typeof ast.ai_summary] || ast.ai_summary.en || ast.ai_summary.ru) : ast.ai_summary;
                             return (
                               <Fragment key={ast.id}>
                                 <tr className={`hover:bg-white/[0.02] transition-colors cursor-pointer ${isSelected ? 'bg-primary/5' : ''}`}>

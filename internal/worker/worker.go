@@ -75,7 +75,7 @@ func (w *Worker) sync(ctx context.Context) {
 		a := nasa.Enrich(neo)
 		if w.aiCli != nil {
 			log.Printf("worker: generating AI summary for asteroid %s...", a.Name)
-			summaries, err := w.aiCli.GenerateSummaries(ctx, a, []string{"en", "ru"})
+			summaries, err := w.aiCli.GenerateSummaries(ctx, a, []string{"en", "ru", "pl", "uk", "hy", "ka", "de", "es", "fr"})
 			if err != nil {
 				log.Printf("worker: AI summary error for %s: %v", a.Name, err)
 			} else {
