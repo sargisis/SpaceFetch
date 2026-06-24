@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Zap, Shield, Layers, Code, Globe } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface FeatureCardProps {
   icon: React.ReactNode;
@@ -83,36 +84,38 @@ function TiltCard({ icon, title, description, index }: FeatureCardProps) {
 }
 
 export default function Features() {
+  const { t } = useLanguage();
+
   const list = [
     {
       icon: <Sparkles className="h-6 w-6" />,
-      title: "Data Normalization",
-      description: "Convert string values to typed floats, simplify deeply nested arrays, and format response keys into standardized camelCase.",
+      title: t('features.f1Title'),
+      description: t('features.f1Desc'),
     },
     {
       icon: <Zap className="h-6 w-6" />,
-      title: "Sub-10ms Speed",
-      description: "Optimized routes combined with internal structures yield fast performance, avoiding typical NASA API latency bottlenecks.",
+      title: t('features.f2Title'),
+      description: t('features.f2Desc'),
     },
     {
       icon: <Layers className="h-6 w-6" />,
-      title: "Edge Caching",
-      description: "Global Redis layer automatically caches queries, serving subsequent requests instantly with real-time Cache Hit headers.",
+      title: t('features.f3Title'),
+      description: t('features.f3Desc'),
     },
     {
       icon: <Globe className="h-6 w-6" />,
-      title: "Unified Endpoints",
-      description: "Query APOD, NeoWs, EPIC, and Mars Rover data using a single auth key and base domain with customizable parameters.",
+      title: t('features.f4Title'),
+      description: t('features.f4Desc'),
     },
     {
       icon: <Shield className="h-6 w-6" />,
-      title: "AI Summarization",
-      description: "Llama-3.3-powered translations and descriptions are generated automatically and served inline inside every query response.",
+      title: t('features.f5Title'),
+      description: t('features.f5Desc'),
     },
     {
       icon: <Code className="h-6 w-6" />,
-      title: "Typed SDKs",
-      description: "Provides out-of-the-box support for TypeScript typings and Go structural models, making integration seamless.",
+      title: t('features.f6Title'),
+      description: t('features.f6Desc'),
     },
   ];
 
@@ -120,11 +123,11 @@ export default function Features() {
     <section id="features" className="py-24 relative">
       <div className="container mx-auto px-6">
         <div className="text-center max-w-2xl mx-auto mb-20">
-          <h2 className="text-3xl md:text-5xl font-bold font-heading mb-4">
-            Engineered for Production
+          <h2 className="text-3xl md:text-5xl font-bold font-heading mb-4 text-white">
+            {t('features.title')}
           </h2>
           <p className="text-slate-400 font-body font-light">
-            We handle the engineering complexities of NASA data pipelines so you can build beautiful products.
+            {t('features.subtitle')}
           </p>
         </div>
 

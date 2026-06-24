@@ -1,4 +1,8 @@
+import { useLanguage } from '../i18n/LanguageContext';
+
 export default function Footer() {
+  const { t } = useLanguage();
+
   return (
     <footer className="border-t border-white/5 bg-black/20 py-12 relative z-10">
       <div className="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -14,15 +18,15 @@ export default function Footer() {
 
         {/* Links */}
         <div className="flex flex-wrap gap-8 text-sm font-body text-slate-400">
-          <a href="#problem-solution" className="hover:text-white transition-colors">Comparison</a>
-          <a href="#features" className="hover:text-white transition-colors">Features</a>
-          <a href="#demo" className="hover:text-white transition-colors">Live Demo</a>
-          <a href="https://github.com/sargisis/SpaceFetch" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">GitHub</a>
+          <a href="#problem-solution" className="hover:text-white transition-colors">{t('header.comparison')}</a>
+          <a href="#features" className="hover:text-white transition-colors">{t('header.features')}</a>
+          <a href="#demo" className="hover:text-white transition-colors">{t('header.demo')}</a>
+          <a href="https://github.com/sargisis/SpaceFetch" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">{t('header.github')}</a>
         </div>
 
         {/* Copyright */}
         <div className="text-xs font-mono text-slate-500">
-          &copy; {new Date().getFullYear()} SpaceFetch. Built for NASA developers.
+          &copy; {new Date().getFullYear()} {t('footer.desc')}
         </div>
       </div>
     </footer>

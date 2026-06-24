@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const rawNASAJSON = `{
   "near_earth_objects": {
@@ -61,6 +62,8 @@ const cleanSpaceFetchJSON = `{
 }`;
 
 export default function ProblemSolution() {
+  const { t } = useLanguage();
+
   return (
     <section id="problem-solution" className="py-24 relative overflow-hidden bg-bg/50 border-y border-white/5">
       {/* Background glow */}
@@ -68,11 +71,11 @@ export default function ProblemSolution() {
 
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold font-heading mb-4">
-            The Problem & The Solution
+          <h2 className="text-3xl md:text-5xl font-bold font-heading mb-4 text-white">
+            {t('problem.title')}
           </h2>
           <p className="text-slate-400 font-body font-light">
-            Stop sorting through redundant structures, stringified floats, and complex nesting. We normalize it in real-time.
+            {t('problem.subtitle')}
           </p>
         </div>
 
@@ -88,7 +91,7 @@ export default function ProblemSolution() {
             <div className="flex items-center justify-between px-4 py-3 rounded-t-xl bg-red-950/20 border-t border-x border-red-500/20">
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-full bg-red-500/40" />
-                <span className="text-xs font-mono text-red-400 font-semibold uppercase tracking-wider">Raw NASA Response</span>
+                <span className="text-xs font-mono text-red-400 font-semibold uppercase tracking-wider">{t('problem.nasaTitle')}</span>
               </div>
               <span className="text-[10px] font-mono text-red-500 animate-glitch font-bold">MESSY & COMPLEX</span>
             </div>
@@ -111,7 +114,7 @@ export default function ProblemSolution() {
             <div className="flex items-center justify-between px-4 py-3 rounded-t-xl bg-blue-950/20 border-t border-x border-accent/20">
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-full bg-accent animate-pulse" />
-                <span className="text-xs font-mono text-accent font-semibold uppercase tracking-wider">SpaceFetch Unified API</span>
+                <span className="text-xs font-mono text-accent font-semibold uppercase tracking-wider">{t('problem.sfTitle')}</span>
               </div>
               <span className="text-[10px] font-mono text-accent font-bold">100% CLEAN JSON</span>
             </div>

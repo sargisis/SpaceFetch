@@ -1,4 +1,7 @@
-import { User } from 'lucide-react';
+import { useState } from 'react';
+import { User, Languages, ChevronDown } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
+import { languages } from '../i18n/translations';
 
 interface HeaderProps {
   user: { email: string; apiKey: string; tier: string } | null;
@@ -9,8 +12,14 @@ interface HeaderProps {
 }
 
 export default function Header({ user, onOpenAuth, onLogout, onOpenConsole, onGoHome }: HeaderProps) {
+  const { language, setLanguage, t } = useLanguage();
+  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+
   return (
     <header className="sticky top-0 left-0 right-0 z-50 w-full border-b border-white/5 bg-bg/60 backdrop-blur-md">
+      {isLangDropdownOpen && (
+        <div className="fixed inset-0 z-40" onClick={() => setIsLangDropdownOpen(false)} />
+      )}
       <div className="container mx-auto px-6 h-16 flex items-center justify-between">
         {/* Brand Logo */}
         <a
@@ -31,21 +40,55 @@ export default function Header({ user, onOpenAuth, onLogout, onOpenConsole, onGo
 
         {/* Navigation Links */}
         <nav className="hidden md:flex items-center gap-8 text-sm font-body text-slate-300">
-          <a href="#problem-solution" className="hover:text-white transition-colors">Comparison</a>
-          <a href="#features" className="hover:text-white transition-colors">Features</a>
-          <a href="#demo" className="hover:text-white transition-colors">Live Demo</a>
+          <a href="#problem-solution" className="hover:text-white transition-colors">{t('header.comparison')}</a>
+          <a href="#features" className="hover:text-white transition-colors">{t('header.features')}</a>
+          <a href="#demo" className="hover:text-white transition-colors">{t('header.demo')}</a>
           <a
             href="https://github.com/sargisis/SpaceFetch"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-white transition-colors"
           >
-            GitHub
+            {t('header.github')}
           </a>
         </nav>
 
-        {/* Authentication Options */}
-        <div className="flex items-center gap-4">
+        {/* Options */}
+        <div className="flex items-center gap-4 relative z-50">
+          {/* Language Selector Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] text-xs font-mono text-slate-300 transition-all cursor-pointer select-none"
+            >
+              <Languages className="h-3.5 w-3.5 text-accent" />
+              <span>{languages.find((l) => l.code === language)?.flag}</span>
+              <span className="uppercase">{language}</span>
+              <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${isLangDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {isLangDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-40 rounded-xl border border-white/5 bg-bg/95 backdrop-blur-md p-1.5 shadow-2xl z-50 animate-in fade-in slide-in-from-top-1 duration-200 max-h-64 overflow-y-auto scrollbar-thin">
+                {languages.map((l) => (
+                  <button
+                    key={l.code}
+                    onClick={() => {
+                      setLanguage(l.code);
+                      setIsLangDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-left font-body font-light transition-all cursor-pointer ${
+                      language === l.code
+                        ? 'bg-primary/20 text-accent font-medium'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <span className="text-sm leading-none">{l.flag}</span>
+                    <span>{l.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           {user ? (
             <div className="flex items-center gap-3 md:gap-4">
               {/* User Info Badge */}
@@ -68,7 +111,7 @@ export default function Header({ user, onOpenAuth, onLogout, onOpenConsole, onGo
                 onClick={onOpenConsole}
                 className="text-xs font-mono px-3 py-1.5 rounded-lg border border-accent/20 bg-accent/5 text-accent hover:bg-accent/10 transition-all cursor-pointer"
               >
-                API Console
+                {t('header.console')}
               </button>
 
               {/* Log out */}
@@ -76,7 +119,7 @@ export default function Header({ user, onOpenAuth, onLogout, onOpenConsole, onGo
                 onClick={onLogout}
                 className="text-xs font-body text-slate-400 hover:text-white hover:underline transition-all cursor-pointer"
               >
-                Log Out
+                {t('header.logout')}
               </button>
             </div>
           ) : (
@@ -85,13 +128,13 @@ export default function Header({ user, onOpenAuth, onLogout, onOpenConsole, onGo
                 onClick={() => onOpenAuth('login')}
                 className="px-4 py-1.5 text-sm font-semibold text-slate-300 hover:text-white transition-all"
               >
-                Sign In
+                {t('header.signIn')}
               </button>
               <button
                 onClick={() => onOpenAuth('register')}
                 className="px-4 py-1.5 text-sm font-semibold rounded-lg bg-primary hover:bg-blue-600 text-white transition-all shadow-[0_0_15px_rgba(59,130,246,0.2)] border border-blue-400/20"
               >
-                Sign Up
+                {t('header.signUp')}
               </button>
             </div>
           )}

@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
 import AsteroidBelt from './AsteroidBelt';
 import RadarDetailsCard from './RadarDetailsCard';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface AsteroidData {
   id: string;
@@ -236,6 +237,7 @@ interface HeroProps {
 }
 
 export default function Hero({ user, onOpenAuth }: HeroProps) {
+  const { t } = useLanguage();
   const [asteroids, setAsteroids] = useState<AsteroidData[]>(mockAsteroids);
   const [selectedAsteroid, setSelectedAsteroid] = useState<AsteroidData | null>(null);
 
@@ -271,7 +273,7 @@ export default function Hero({ user, onOpenAuth }: HeroProps) {
       <div className="absolute inset-0 w-full h-full -z-10">
         <Suspense fallback={
           <div className="flex h-full w-full items-center justify-center text-accent/50 font-mono animate-pulse">
-            INITIALIZING 3D WORLD...
+            {t('hero.loadingSpace')}
           </div>
         }>
           <Canvas
@@ -298,17 +300,16 @@ export default function Hero({ user, onOpenAuth }: HeroProps) {
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-blue-500/20 bg-blue-500/5 mb-6 backdrop-blur-md">
             <span className="h-2 w-2 rounded-full bg-accent animate-ping" />
             <span className="text-xs font-mono tracking-wider uppercase text-accent font-semibold">
-              Now active: Groq-powered normalization
+              {t('hero.badge')}
             </span>
           </div>
 
           <h1 className="text-5xl md:text-7xl font-bold font-heading mb-6 bg-gradient-to-r from-white via-slate-100 to-blue-400 bg-clip-text text-transparent leading-none">
-            Raw NASA data in.<br />
-            <span className="text-accent">Clean API out.</span>
+            {t('hero.title')}
           </h1>
 
           <p className="text-lg md:text-xl font-body text-slate-400 max-w-2xl mx-auto mb-8 font-light leading-relaxed">
-            Stop scraping messy NASA endpoints. SpaceFetch cleans, structures, and serves APOD, NeoWs, EPIC, and Mars Rover data via a unified, blazingly fast endpoint.
+            {t('hero.subtitle')}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -324,7 +325,7 @@ export default function Hero({ user, onOpenAuth }: HeroProps) {
               whileTap={{ scale: 0.95 }}
               className="px-8 py-3.5 rounded-lg bg-primary hover:bg-blue-600 text-white font-semibold transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] border border-blue-400/20 cursor-pointer"
             >
-              {user ? "Go to Live Demo" : "Get Started Free"}
+              {user ? t('hero.demoButton') : t('hero.getStarted')}
             </motion.button>
             <motion.a
               href="#problem-solution"
@@ -332,7 +333,7 @@ export default function Hero({ user, onOpenAuth }: HeroProps) {
               whileTap={{ scale: 0.95 }}
               className="px-8 py-3.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 font-semibold border border-white/10 backdrop-blur-md transition-all"
             >
-              Learn More
+              {t('hero.learnMore')}
             </motion.a>
           </div>
         </motion.div>
@@ -344,7 +345,7 @@ export default function Hero({ user, onOpenAuth }: HeroProps) {
           className="absolute bottom-10 flex flex-col items-center gap-2 cursor-pointer opacity-70 hover:opacity-100 transition-opacity"
           onClick={() => document.getElementById('problem-solution')?.scrollIntoView({ behavior: 'smooth' })}
         >
-          <span className="text-[10px] tracking-widest font-mono text-accent uppercase">Explore</span>
+          <span className="text-[10px] tracking-widest font-mono text-accent uppercase">{t('hero.explore')}</span>
           <div className="h-6 w-3.5 rounded-full border border-accent/40 flex justify-center p-1">
             <div className="h-1.5 w-1.5 rounded-full bg-accent" />
           </div>
