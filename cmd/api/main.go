@@ -30,7 +30,7 @@ func main() {
 	}
 	defer rcache.Close()
 
-	router := api.NewRouter(mdb, rcache)
+	router := api.NewRouter(mdb, rcache, cfg.FrontendDir)
 
 	server := &http.Server{
 		Addr:    ":" + cfg.APIPort,

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Copy, Check, Shield, Mail, Key, Sparkles, AlertCircle } from 'lucide-react';
+import { getApiUrl } from '../config';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -41,7 +42,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
 
     try {
       // Connect to Go backend user registration endpoint
-      const res = await fetch('http://localhost:8080/v1/users', {
+      const res = await fetch(getApiUrl('/v1/users'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -85,7 +86,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
 
     // Verify key against local backend
     try {
-      const res = await fetch('http://localhost:8080/v1/asteroids/today', {
+      const res = await fetch(getApiUrl('/v1/asteroids/today'), {
         method: 'GET',
         headers: {
           'X-API-Key': apiKeyInput,

@@ -16,6 +16,7 @@ type Config struct {
 	APIPort        string
 	WorkerInterval time.Duration
 	CacheTTL       time.Duration
+	FrontendDir    string
 }
 
 func Load() *Config {
@@ -29,6 +30,7 @@ func Load() *Config {
 		APIPort:        getEnv("API_PORT", "8080"),
 		WorkerInterval: getDuration("WORKER_INTERVAL", 6*time.Hour),
 		CacheTTL:       getDuration("CACHE_TTL", 1*time.Hour),
+		FrontendDir:    getEnv("FRONTEND_DIR", "./frontend/dist"),
 	}
 }
 

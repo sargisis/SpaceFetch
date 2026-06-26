@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
 import AsteroidBelt from './AsteroidBelt';
 import RadarDetailsCard from './RadarDetailsCard';
+import { getApiUrl } from '../config';
 import { useLanguage } from '../i18n/LanguageContext';
 
 interface AsteroidData {
@@ -244,7 +245,7 @@ export default function Hero({ user, onOpenAuth }: HeroProps) {
   useEffect(() => {
     if (user) {
       // Fetch live normalizations from local Go backend API using user credentials
-      fetch('http://localhost:8080/v1/asteroids/today', {
+      fetch(getApiUrl('/v1/asteroids/today'), {
         headers: {
           'X-API-Key': user.apiKey,
         },

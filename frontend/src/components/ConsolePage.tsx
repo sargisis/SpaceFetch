@@ -15,6 +15,7 @@ import {
   EyeOff
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
+import { getApiUrl } from '../config';
 const ThreatDashboard = lazy(() => import('./ThreatDashboard'));
 
 interface AsteroidData {
@@ -102,7 +103,7 @@ export default function ConsolePage({ user, onGoHome }: ConsolePageProps) {
       .catch((err) => console.error('Failed to fetch EPIC', err));
 
     // 3. Fetch Asteroids from Local Go Backend
-    fetch('http://localhost:8080/v1/asteroids/today', {
+    fetch(getApiUrl('/v1/asteroids/today'), {
       headers: {
         'X-API-Key': user.apiKey
       }

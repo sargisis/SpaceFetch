@@ -56,10 +56,15 @@ if [ "$MODE" = "local" ]; then
     WORKER_PID=$!
 
     # Start React Frontend
-    echo "Starting Vite Dev Server on port 5173..."
-    cd frontend && npm run dev &
-    FRONT_PID=$!
-    cd ..
+    if command -v npm >/dev/null 2>&1; then
+        echo "Starting Vite Dev Server on port 5173..."
+        cd frontend && npm run dev &
+        FRONT_PID=$!
+        cd ..
+    else
+        echo "⚠️ npm was not found. Skipping Vite Dev Server. The Go API server will serve frontend static files from $FRONTEND_DIR if built."
+        FRONT_PID=""
+    fi
 
     # Handle graceful exit of all local background processes on ctrl+c
     cleanup() {
