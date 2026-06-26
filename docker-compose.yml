@@ -4,8 +4,7 @@ services:
   mongodb:
     image: mongo:7
     container_name: spacefetch-mongo
-    ports:
-      - "27017:27017"
+    # No external port exposure — only accessible within the Docker network
     volumes:
       - mongo-data:/data/db
     environment:
@@ -14,8 +13,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: spacefetch-redis
-    ports:
-      - "6379:6379"
+    # No external port exposure — only accessible within the Docker network
     volumes:
       - redis-data:/data
 

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -23,10 +24,9 @@ const (
 func AuthMiddleware(db *database.MongoDB, rcache *cache.RedisCache) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Only accept API key from header — never from URL query params
+			// (query params leak into server logs, browser history, Referer headers)
 			key := r.Header.Get("X-API-Key")
-			if key == "" {
-				key = r.URL.Query().Get("api_key")
-			}
 
 			if key == "" {
 				writeError(w, http.StatusUnauthorized, "missing X-API-Key header")
@@ -105,10 +105,28 @@ func writeError(w http.ResponseWriter, status int, message string) {
 }
 
 func CORS(next http.Handler) http.Handler {
+	// Load allowed origin from env, fall back to localhost for dev
+	allowedOrigin := os.Getenv("ALLOWED_ORIGIN")
+	if allowedOrigin == "" {
+		allowedOrigin = "http://localhost:5173"
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		origin := r.Header.Get("Origin")
+
+		// Only allow requests from the configured frontend origin
+		if origin == allowedOrigin {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		}
+
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "X-API-Key, Content-Type")
+
+		// Security headers
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
 			return

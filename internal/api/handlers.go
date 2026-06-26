@@ -6,12 +6,16 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/sargisis/spacefetch/internal/cache"
 	"github.com/sargisis/spacefetch/internal/database"
 	"github.com/sargisis/spacefetch/internal/models"
 )
+
+// Basic email format regex
+var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 
 type Handler struct {
 	db    *database.MongoDB
@@ -74,6 +78,11 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	if req.Email == "" {
 		writeError(w, http.StatusBadRequest, "email is required")
+		return
+	}
+
+	if !emailRegex.MatchString(req.Email) {
+		writeError(w, http.StatusBadRequest, "invalid email format")
 		return
 	}
 
