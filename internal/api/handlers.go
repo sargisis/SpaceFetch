@@ -20,12 +20,13 @@ import (
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 
 type Handler struct {
-	db    *database.MongoDB
-	cache *cache.RedisCache
+	db            *database.MongoDB
+	cache         *cache.RedisCache
+	secureCookies bool
 }
 
-func NewHandler(db *database.MongoDB, cache *cache.RedisCache) *Handler {
-	return &Handler{db: db, cache: cache}
+func NewHandler(db *database.MongoDB, cache *cache.RedisCache, secureCookies bool) *Handler {
+	return &Handler{db: db, cache: cache, secureCookies: secureCookies}
 }
 
 func (h *Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
@@ -137,7 +138,8 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	hashedKey := hashAPIKey(apiKey)
 
-	user, err := h.db.CreateUser(r.Context(), req.Email, hashedKey, tier)
+	// Key-only developer account: no password, no console session
+	user, err := h.db.CreateUser(r.Context(), req.Email, hashedKey, "", tier)
 	if err != nil {
 		writeError(w, http.StatusConflict, "email already registered")
 		return

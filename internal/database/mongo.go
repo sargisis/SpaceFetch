@@ -68,12 +68,13 @@ func NewMongoDB(uri, dbName string) (*MongoDB, error) {
 	}, nil
 }
 
-func (m *MongoDB) CreateUser(ctx context.Context, email, hashedKey, tier string) (*models.User, error) {
+func (m *MongoDB) CreateUser(ctx context.Context, email, hashedKey, passwordHash, tier string) (*models.User, error) {
 	now := time.Now().UTC()
 	user := &models.User{
 		ID:           primitive.NewObjectID(),
 		Email:        email,
 		HashedAPIKey: hashedKey,
+		PasswordHash: passwordHash,
 		Tier:         tier,
 		CreatedAt:    now,
 		UpdatedAt:    now,
@@ -85,6 +86,23 @@ func (m *MongoDB) CreateUser(ctx context.Context, email, hashedKey, tier string)
 	}
 
 	return user, nil
+}
+
+func (m *MongoDB) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
+	var user models.User
+	err := m.users.FindOne(ctx, bson.M{"email": email}).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (m *MongoDB) UpdateAPIKeyHash(ctx context.Context, email, newHashedKey string) error {
+	_, err := m.users.UpdateOne(ctx,
+		bson.M{"email": email},
+		bson.M{"$set": bson.M{"hashed_api_key": newHashedKey, "updated_at": time.Now().UTC()}},
+	)
+	return err
 }
 
 func (m *MongoDB) GetUserByHashedKey(ctx context.Context, hashedKey string) (*models.User, error) {

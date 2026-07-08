@@ -7,6 +7,8 @@ import LiveDemo from './components/LiveDemo';
 import CTA from './components/CTA';
 import Footer from './components/Footer';
 import { LanguageProvider } from './i18n/LanguageContext';
+import { getApiUrl } from './config';
+import type { SessionUser } from './types';
 
 // Lazy load 3D heavy components for optimized load time
 const StarField = lazy(() => import('./components/StarField'));
@@ -14,31 +16,39 @@ const Hero = lazy(() => import('./components/Hero'));
 const ConsolePage = lazy(() => import('./components/ConsolePage'));
 
 export default function App() {
-  const [user, setUser] = useState<{ email: string; apiKey: string; tier: string } | null>(null);
+  const [user, setUser] = useState<SessionUser | null>(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [view, setView] = useState<'landing' | 'console'>('landing');
   const [authTab, setAuthTab] = useState<'login' | 'register'>('login');
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('sf_user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        console.error('Failed to parse saved user from local storage', e);
-      }
-    }
+    // Drop credentials persisted by the old localStorage-based auth —
+    // they were readable by any XSS payload
+    localStorage.removeItem('sf_user');
+
+    // Restore the console session from the httpOnly cookie
+    fetch(getApiUrl('/v1/auth/me'), { credentials: 'include' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setUser({ email: data.email, tier: data.tier });
+      })
+      .catch(() => {
+        // Backend unreachable — stay logged out
+      });
   }, []);
 
-  const handleLoginSuccess = (userData: { email: string; apiKey: string; tier: string }) => {
+  const handleLoginSuccess = (userData: SessionUser) => {
     setUser(userData);
-    localStorage.setItem('sf_user', JSON.stringify(userData));
     setView('console');
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch(getApiUrl('/v1/auth/logout'), { method: 'POST', credentials: 'include' });
+    } catch {
+      // Session cookie expires server-side anyway
+    }
     setUser(null);
-    localStorage.removeItem('sf_user');
     setView('landing');
   };
 
@@ -71,7 +81,11 @@ export default function App() {
             </div>
           }>
             {view === 'console' && user ? (
-              <ConsolePage user={user} onGoHome={() => setView('landing')} />
+              <ConsolePage
+                user={user}
+                onGoHome={() => setView('landing')}
+                onApiKeyChange={(key) => setUser((u) => (u ? { ...u, apiKey: key } : u))}
+              />
             ) : (
               <>
                 <Hero user={user} onOpenAuth={handleOpenAuth} />

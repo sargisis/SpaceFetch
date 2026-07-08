@@ -277,11 +277,13 @@ Ensure you have local instances of MongoDB (port `27017`) and Redis (port `6379`
 
 ## 📡 API Specification
 
-All authenticated requests require the `X-API-Key` header or `?api_key=` query parameter.
+All authenticated requests require the `X-API-Key` header (external clients) **or** the `sf_session` httpOnly cookie (web console). API keys are never accepted via query parameters — they would leak into logs and browser history.
 
 <br/>
 
-### 1️⃣ Register User _(Public)_
+### 1️⃣ Register User _(Public, rate-limited per IP)_
+
+Key-only developer registration (no console access):
 
 ```
 POST /v1/users
@@ -303,6 +305,26 @@ POST /v1/users
   "tier": "free"
 }
 ```
+
+> ⚠️ The API key is returned **exactly once** and stored server-side only as a SHA-256 hash. Save it immediately.
+
+<br/>
+
+### 🔐 Console Auth _(cookie sessions)_
+
+The web console authenticates with an httpOnly, SameSite=Lax session cookie backed by Redis — nothing sensitive is stored in `localStorage`.
+
+```
+POST /v1/auth/register        {"email", "password", "tier"?}  → 201 + api_key (shown once) + session cookie
+POST /v1/auth/login           {"email", "password"}           → 200 + session cookie
+GET  /v1/auth/me                                              → 200 {"email", "tier"} | 401
+POST /v1/auth/regenerate-key  (session required)              → 200 + new api_key; the old key is revoked instantly
+POST /v1/auth/logout                                          → 200, session destroyed server-side
+```
+
+- Passwords: min 8 characters, stored as bcrypt hashes.
+- `register` and `login` are rate-limited per IP (5/min and 10/min).
+- Set `COOKIE_SECURE=true` in production (HTTPS) so cookies are marked `Secure`.
 
 <br/>
 
