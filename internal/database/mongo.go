@@ -44,6 +44,23 @@ func NewMongoDB(uri, dbName string) (*MongoDB, error) {
 		return nil, fmt.Errorf("mongo create index: %w", err)
 	}
 
+	// Unique index on hashed API key — auth lookups hit this on every cache miss
+	_, err = users.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "hashed_api_key", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("mongo create index: %w", err)
+	}
+
+	// Index on close approach date — GetTodayAsteroids filters on it
+	_, err = asteroids.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{{Key: "close_approach_date", Value: 1}},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("mongo create index: %w", err)
+	}
+
 	return &MongoDB{
 		client:    client,
 		asteroids: asteroids,
@@ -109,6 +126,10 @@ func (m *MongoDB) GetTodayAsteroids(ctx context.Context) ([]models.Asteroid, err
 		return nil, err
 	}
 	return asteroids, nil
+}
+
+func (m *MongoDB) Ping(ctx context.Context) error {
+	return m.client.Ping(ctx, nil)
 }
 
 func (m *MongoDB) Close() error {

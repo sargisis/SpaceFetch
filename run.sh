@@ -1,4 +1,4 @@
-#!/bin/bash
+xnj #!/bin/bash
 
 MODE=${1:-docker}
 

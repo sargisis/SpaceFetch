@@ -81,7 +81,7 @@ func RateLimitMiddleware(redisCache *cache.RedisCache) func(http.Handler) http.H
 			allowed, err := redisCache.CheckRateLimit(r.Context(), user.Email, limit, 1*time.Second)
 			if err != nil {
 				log.Printf("rate limit error: %v", err)
-				writeError(w, http.StatusTooManyRequests, "rate limit exceeded")
+				writeError(w, http.StatusInternalServerError, "internal server error")
 				return
 			}
 

@@ -1,10 +1,12 @@
 package api
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"log"
 	"net/http"
 	"regexp"
 	"time"
@@ -26,34 +28,66 @@ func NewHandler(db *database.MongoDB, cache *cache.RedisCache) *Handler {
 	return &Handler{db: db, cache: cache}
 }
 
+func (h *Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	status := http.StatusOK
+	checks := map[string]string{
+		"mongodb": "ok",
+		"redis":   "ok",
+	}
+
+	if err := h.db.Ping(ctx); err != nil {
+		checks["mongodb"] = "unavailable"
+		status = http.StatusServiceUnavailable
+	}
+	if err := h.cache.Ping(ctx); err != nil {
+		checks["redis"] = "unavailable"
+		status = http.StatusServiceUnavailable
+	}
+
+	overall := "ok"
+	if status != http.StatusOK {
+		overall = "degraded"
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status": overall,
+		"checks": checks,
+	})
+}
+
 func (h *Handler) GetTodayAsteroids(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 
-	// 1. Check cache
+	// 1. Check cache; on cache error fall through to MongoDB
 	asteroids, cached, err := h.cache.Get(r.Context())
 	if err != nil {
-		http.Error(w, "cache error", http.StatusInternalServerError)
-		return
+		log.Printf("asteroids: redis cache error: %v", err)
+		cached = false
 	}
 
 	// 2. Cache miss — fetch from MongoDB
 	if !cached {
 		asteroids, err = h.db.GetTodayAsteroids(r.Context())
 		if err != nil {
-			http.Error(w, "database error", http.StatusInternalServerError)
+			writeError(w, http.StatusInternalServerError, "database error")
 			return
 		}
 
 		// Best-effort cache write
 		if err := h.cache.Set(r.Context(), asteroids); err != nil {
-			// log but don't fail
+			log.Printf("asteroids: failed to cache: %v", err)
 		}
 	}
 
 	resp := models.APIResponse{
 		Status: "success",
 		Meta: models.ResponseMeta{
-			Cached:         cached || false,
+			Cached:         cached,
 			ResponseTimeMs: time.Since(start).Milliseconds(),
 			TotalObjects:   len(asteroids),
 		},
