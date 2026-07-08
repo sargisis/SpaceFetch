@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Copy, Check, Shield, Mail, Key, Sparkles, AlertCircle } from 'lucide-react';
+import { X, Copy, Check, Shield, Mail, Lock, Sparkles, AlertCircle } from 'lucide-react';
 import { getApiUrl } from '../config';
 import { useLanguage } from '../i18n/LanguageContext';
+import type { SessionUser } from '../types';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultTab: 'login' | 'register';
-  onLoginSuccess: (user: { email: string; apiKey: string; tier: string }) => void;
+  onLoginSuccess: (user: SessionUser) => void;
 }
 
 type Tab = 'login' | 'register' | 'recover';
@@ -17,7 +18,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<Tab>(defaultTab);
   const [email, setEmail] = useState('');
-  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [password, setPassword] = useState('');
   const [tier] = useState<'free' | 'premium'>('free'); // Default to free as subscriptions are removed
 
   // Registration success state
@@ -37,19 +38,25 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || !password) return;
+    if (password.length < 8) {
+      setErrorMsg(t('auth.errorPasswordShort'));
+      return;
+    }
 
     setLoading(true);
     setErrorMsg(null);
 
     try {
-      // Connect to Go backend user registration endpoint
-      const res = await fetch(getApiUrl('/v1/users'), {
+      // Creates the account and starts an httpOnly cookie session.
+      // The API key is returned exactly once, right here.
+      const res = await fetch(getApiUrl('/v1/auth/register'), {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, tier }),
+        body: JSON.stringify({ email, password, tier }),
       });
 
       const data = await res.json();
@@ -67,15 +74,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
       });
     } catch (err) {
       console.error(err);
-      // Network failure only — backend unreachable, offer a local demo key
-      const mockKey = `sf_live_mock_${Math.random().toString(16).substring(2, 10)}${Math.random().toString(16).substring(2, 10)}`;
-      setGeneratedKey(mockKey);
-      onLoginSuccess({
-        email,
-        apiKey: mockKey,
-        tier,
-      });
-      setInfoMsg(t('auth.offlineMode'));
+      setErrorMsg(t('auth.errorNetwork'));
     } finally {
       setLoading(false);
     }
@@ -83,38 +82,35 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!apiKeyInput) return;
+    if (!email || !password) return;
 
     setLoading(true);
     setErrorMsg(null);
 
-    // Verify key against local backend
     try {
-      const res = await fetch(getApiUrl('/v1/asteroids/today'), {
-        method: 'GET',
+      const res = await fetch(getApiUrl('/v1/auth/login'), {
+        method: 'POST',
+        credentials: 'include',
         headers: {
-          'X-API-Key': apiKeyInput,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ email, password }),
       });
 
-      if (res.status === 200) {
-        onLoginSuccess({
-          email: email || 'developer@spacefetch.dev',
-          apiKey: apiKeyInput,
-          tier: apiKeyInput.includes('premium') ? 'premium' : 'free',
-        });
-        onClose();
-      } else {
-        setErrorMsg(t('auth.errorInvalidKey'));
+      const data = await res.json();
+      if (!res.ok) {
+        setErrorMsg(res.status === 401 ? t('auth.errorInvalidCredentials') : data.message || t('auth.errorGeneric'));
+        return;
       }
-    } catch (err) {
-      // Local fallback login
+
       onLoginSuccess({
-        email: email || 'local.dev@spacefetch.dev',
-        apiKey: apiKeyInput,
-        tier: 'free',
+        email: data.email,
+        tier: data.tier,
       });
       onClose();
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(t('auth.errorNetwork'));
     } finally {
       setLoading(false);
     }
@@ -250,29 +246,30 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
               {activeTab === 'login' && !generatedKey && (
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">{t('auth.apiKeyLabel')}</label>
+                    <label className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">{t('auth.emailLabel')}</label>
                     <div className="relative group focus-within:ring-1 focus-within:ring-accent/50 rounded-xl transition-all">
-                      <Key className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500 group-focus-within:text-accent transition-colors" />
+                      <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500 group-focus-within:text-accent transition-colors" />
                       <input
-                        type="password"
+                        type="email"
                         required
-                        placeholder="sf_live_..."
-                        value={apiKeyInput}
-                        onChange={(e) => setApiKeyInput(e.target.value)}
-                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-accent transition-all"
+                        placeholder="your@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-body text-white placeholder-slate-600 focus:outline-none focus:border-accent transition-all"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">{t('auth.emailOptional')}</label>
+                    <label className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">{t('auth.passwordLabel')}</label>
                     <div className="relative group focus-within:ring-1 focus-within:ring-accent/50 rounded-xl transition-all">
-                      <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500 group-focus-within:text-accent transition-colors" />
+                      <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500 group-focus-within:text-accent transition-colors" />
                       <input
-                        type="email"
-                        placeholder="your@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        type="password"
+                        required
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-body text-white placeholder-slate-600 focus:outline-none focus:border-accent transition-all"
                       />
                     </div>
@@ -301,6 +298,22 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
                         placeholder="your@email.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-body text-white placeholder-slate-600 focus:outline-none focus:border-accent transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">{t('auth.passwordLabel')}</label>
+                    <div className="relative group focus-within:ring-1 focus-within:ring-accent/50 rounded-xl transition-all">
+                      <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500 group-focus-within:text-accent transition-colors" />
+                      <input
+                        type="password"
+                        required
+                        minLength={8}
+                        placeholder={t('auth.passwordPlaceholder')}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-body text-white placeholder-slate-600 focus:outline-none focus:border-accent transition-all"
                       />
                     </div>

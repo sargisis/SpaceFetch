@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
 import { useLanguage } from '../i18n/LanguageContext';
+import type { SessionUser } from '../types';
 
 interface CTAProps {
-  user: { email: string; apiKey: string; tier: string } | null;
+  user: SessionUser | null;
   onOpenAuth: (tab: 'login' | 'register') => void;
 }
 
