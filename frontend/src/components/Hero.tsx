@@ -208,26 +208,30 @@ interface SceneProps {
   asteroids: AsteroidData[];
   selectedId: string | null;
   onSelectAsteroid: (asteroid: AsteroidData) => void;
+  enableEffects: boolean;
 }
 
-function Scene({ asteroids, selectedId, onSelectAsteroid }: SceneProps) {
+function Scene({ asteroids, selectedId, onSelectAsteroid, enableEffects }: SceneProps) {
   return (
     <>
       <ambientLight intensity={0.6} />
       <directionalLight position={[5, 5, 5]} intensity={1.5} castShadow />
       <pointLight position={[-5, -5, -5]} intensity={0.5} color="#3B82F6" />
       <InteractiveEarth />
-      
+
       {/* 3D Asteroid radar objects */}
       <AsteroidBelt
         asteroids={asteroids}
         selectedId={selectedId}
         onSelect={onSelectAsteroid}
       />
-      
-      <EffectComposer>
-        <Bloom luminanceThreshold={0.15} luminanceSmoothing={0.8} height={300} opacity={0.8} />
-      </EffectComposer>
+
+      {/* Bloom post-processing is too heavy for mobile GPUs — desktop only */}
+      {enableEffects && (
+        <EffectComposer>
+          <Bloom luminanceThreshold={0.15} luminanceSmoothing={0.8} height={300} opacity={0.8} />
+        </EffectComposer>
+      )}
     </>
   );
 }
@@ -241,6 +245,10 @@ export default function Hero({ user, onOpenAuth }: HeroProps) {
   const { t } = useLanguage();
   const [asteroids, setAsteroids] = useState<AsteroidData[]>(mockAsteroids);
   const [selectedAsteroid, setSelectedAsteroid] = useState<AsteroidData | null>(null);
+  // Touch devices get a lighter 3D scene: no bloom, capped pixel ratio
+  const [isMobile] = useState(() =>
+    typeof window !== 'undefined' && (window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768)
+  );
 
   useEffect(() => {
     if (user) {
@@ -269,7 +277,7 @@ export default function Hero({ user, onOpenAuth }: HeroProps) {
   }, [user]);
 
   return (
-    <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
+    <section className="relative h-svh w-full flex items-center justify-center overflow-hidden">
       {/* 3D Canvas Background */}
       <div className="absolute inset-0 w-full h-full -z-10">
         <Suspense fallback={
@@ -279,12 +287,14 @@ export default function Hero({ user, onOpenAuth }: HeroProps) {
         }>
           <Canvas
             camera={{ position: [0, 0, 6.5], fov: 45 }}
-            gl={{ antialias: true, alpha: true }}
+            gl={{ antialias: !isMobile, alpha: true }}
+            dpr={isMobile ? [1, 1.5] : [1, 2]}
           >
             <Scene
               asteroids={asteroids}
               selectedId={selectedAsteroid ? selectedAsteroid.id : null}
               onSelectAsteroid={setSelectedAsteroid}
+              enableEffects={!isMobile}
             />
           </Canvas>
         </Suspense>
@@ -298,11 +308,11 @@ export default function Hero({ user, onOpenAuth }: HeroProps) {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="max-w-4xl"
         >
-          <h1 className="text-5xl md:text-7xl font-bold font-heading mb-6 bg-gradient-to-r from-white via-slate-100 to-blue-400 bg-clip-text text-transparent leading-none">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold font-heading mb-6 bg-gradient-to-r from-white via-slate-100 to-blue-400 bg-clip-text text-transparent leading-tight md:leading-none">
             {t('hero.title')}
           </h1>
 
-          <p className="text-lg md:text-xl font-body text-slate-400 max-w-2xl mx-auto mb-8 font-light leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl font-body text-slate-400 max-w-2xl mx-auto mb-8 font-light leading-relaxed">
             {t('hero.subtitle')}
           </p>
 
