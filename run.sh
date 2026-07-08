@@ -1,4 +1,4 @@
-xnj #!/bin/bash
+#!/bin/bash
 
 MODE=${1:-docker}
 
@@ -38,6 +38,39 @@ if [ "$MODE" = "local" ]; then
     else
         echo ".env file not found!"
         exit 1
+    fi
+
+    # Automatically start database containers if docker is running
+    if command -v docker >/dev/null 2>&1; then
+        if docker info >/dev/null 2>&1; then
+            echo "🐳 Docker daemon is running. Ensuring database containers are active..."
+
+            # MongoDB container check/start
+            if [ "$(docker ps -a -q -f name=spacefetch-mongo)" ]; then
+                if [ "$(docker inspect -f '{{.State.Running}}' spacefetch-mongo 2>/dev/null)" != "true" ]; then
+                    echo "🔄 Starting existing spacefetch-mongo container..."
+                    docker start spacefetch-mongo >/dev/null
+                fi
+            else
+                echo "🚀 Creating and starting spacefetch-mongo container..."
+                docker run -d --name spacefetch-mongo -p 27017:27017 -v mongo-data:/data/db -e MONGO_INITDB_DATABASE=spacefetch mongo:7 >/dev/null
+            fi
+
+            # Redis container check/start
+            if [ "$(docker ps -a -q -f name=spacefetch-redis)" ]; then
+                if [ "$(docker inspect -f '{{.State.Running}}' spacefetch-redis 2>/dev/null)" != "true" ]; then
+                    echo "🔄 Starting existing spacefetch-redis container..."
+                    docker start spacefetch-redis >/dev/null
+                fi
+            else
+                echo "🚀 Creating and starting spacefetch-redis container..."
+                docker run -d --name spacefetch-redis -p 6379:6379 -v redis-data:/data redis:7-alpine >/dev/null
+            fi
+        else
+            echo "⚠️ Docker daemon is installed but not running. Please make sure MongoDB and Redis are running locally."
+        fi
+    else
+        echo "⚠️ Docker is not installed. Please make sure MongoDB and Redis are running locally."
     fi
 
     # Compile backend first
