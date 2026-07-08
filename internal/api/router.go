@@ -21,13 +21,17 @@ func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Check if file exists and is not a directory
 	fi, err := os.Stat(path)
-	if os.IsNotExist(err) || fi.IsDir() {
-		// File does not exist or is a directory, serve index.html
-		http.ServeFile(w, r, filepath.Join(h.staticPath, h.indexPath))
+	if err != nil {
+		if os.IsNotExist(err) {
+			// File does not exist, serve index.html (SPA fallback)
+			http.ServeFile(w, r, filepath.Join(h.staticPath, h.indexPath))
+			return
+		}
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
-	} else if err != nil {
-		// Return internal server error if stat fails unexpectedly
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	if fi.IsDir() {
+		http.ServeFile(w, r, filepath.Join(h.staticPath, h.indexPath))
 		return
 	}
 
@@ -40,7 +44,8 @@ func NewRouter(db *database.MongoDB, rcache *cache.RedisCache, frontendDir strin
 
 	mux := http.NewServeMux()
 
-	// 1. Public Endpoint - Developer registration
+	// 1. Public Endpoints - health check and developer registration
+	mux.HandleFunc("GET /health", h.HealthCheck)
 	mux.HandleFunc("POST /v1/users", h.RegisterUser)
 
 	// 2. Protected Mux

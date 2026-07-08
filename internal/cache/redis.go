@@ -84,21 +84,32 @@ func (r *RedisCache) GetUserCache(ctx context.Context, hashedKey string) (*model
 	return &user, true, nil
 }
 
+func (r *RedisCache) Ping(ctx context.Context) error {
+	return r.cli.Ping(ctx).Err()
+}
+
 func (r *RedisCache) Close() error {
 	return r.cli.Close()
 }
 
 // Rate limiting
 
+// rateLimitScript atomically increments the counter and sets the expiry on
+// first increment, so a crash between INCR and EXPIRE can't leave a counter
+// without TTL (which would lock the user out permanently).
+var rateLimitScript = redis.NewScript(`
+local v = redis.call("INCR", KEYS[1])
+if v == 1 then
+	redis.call("PEXPIRE", KEYS[1], ARGV[1])
+end
+return v
+`)
+
 func (r *RedisCache) CheckRateLimit(ctx context.Context, apiKey string, limit int, window time.Duration) (bool, error) {
 	key := fmt.Sprintf("ratelimit:%s", apiKey)
-	val, err := r.cli.Incr(ctx, key).Result()
+	val, err := rateLimitScript.Run(ctx, r.cli, []string{key}, window.Milliseconds()).Int64()
 	if err != nil {
 		return false, err
-	}
-	if val == 1 {
-		// first request in window — set expiry
-		r.cli.Expire(ctx, key, window)
 	}
 	return val <= int64(limit), nil
 }

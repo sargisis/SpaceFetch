@@ -35,7 +35,7 @@ func TestAuthenticationFlow(t *testing.T) {
 	db, _ = database.NewMongoDB("mongodb://localhost:27017", "spacefetch_test")
 
 	// Set up router
-	router := NewRouter(db, rcache)
+	router := NewRouter(db, rcache, "")
 
 	// Step 1: Register a new user
 	regReq := models.UserRegisterRequest{

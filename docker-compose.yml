@@ -1,21 +1,30 @@
-version: "3.9"
-
 services:
   mongodb:
     image: mongo:7
     container_name: spacefetch-mongo
-    # No external port exposure — only accessible within the Docker network
     volumes:
       - mongo-data:/data/db
     environment:
       MONGO_INITDB_DATABASE: spacefetch
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   redis:
     image: redis:7-alpine
     container_name: spacefetch-redis
-    # No external port exposure — only accessible within the Docker network
     volumes:
       - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
 
   api:
     build:
@@ -23,15 +32,27 @@ services:
       dockerfile: Dockerfile.api
     container_name: spacefetch-api
     ports:
-      - "8080:8080"
+      # Bind to localhost only — don't expose the API to the local network
+      - "127.0.0.1:8080:8080"
     depends_on:
-      - mongodb
-      - redis
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     env_file:
       - .env
     environment:
       - MONGO_URI=mongodb://mongodb:27017
       - REDIS_ADDR=redis:6379
+    restart: unless-stopped
+    develop:
+      watch:
+        - path: ./cmd
+          action: rebuild
+        - path: ./internal
+          action: rebuild
+        - path: ./frontend
+          action: rebuild
 
   worker:
     build:
@@ -39,23 +60,25 @@ services:
       dockerfile: Dockerfile.worker
     container_name: spacefetch-worker
     depends_on:
-      - mongodb
-      - redis
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     env_file:
       - .env
     environment:
       - MONGO_URI=mongodb://mongodb:27017
       - REDIS_ADDR=redis:6379
-
-#  frontend:
-#    build:
-#      context: ./frontend
-#    container_name: spacefetch-frontend
-#    ports:
-#      - "5173:5173"
-#    depends_on:
-#      - api
+    restart: unless-stopped
+    develop:
+      watch:
+        - path: ./cmd
+          action: rebuild
+        - path: ./internal
+          action: rebuild
 
 volumes:
   mongo-data:
+    driver: local
   redis-data:
+    driver: local

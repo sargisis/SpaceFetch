@@ -1,22 +1,26 @@
+# syntax=docker/dockerfile:1
+
 # Stage 1: Build binary
 FROM golang:1.26-alpine AS builder
-
 WORKDIR /app
 
 # Copy dependency files and download
 COPY go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
 
-# Copy source code and build
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o worker ./cmd/worker
+# Copy source code and build (only what's needed)
+COPY cmd cmd
+COPY internal internal
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux go build -o worker ./cmd/worker
 
 # Stage 2: Runtime image
-FROM alpine:latest
-
-RUN apk --no-cache add ca-certificates
-
+FROM alpine:3.20
+RUN apk --no-cache add ca-certificates && adduser -D -H -u 10001 app
 WORKDIR /app
 COPY --from=builder /app/worker .
+
+USER app
 
 CMD ["./worker"]
