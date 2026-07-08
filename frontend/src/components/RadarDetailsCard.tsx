@@ -47,7 +47,7 @@ export default function RadarDetailsCard({ asteroid, onClose }: RadarDetailsCard
       initial={{ opacity: 0, x: -30, scale: 0.95 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, x: -30, scale: 0.95 }}
-      className="absolute bottom-6 left-6 z-20 w-full max-w-sm bg-[#070b19]/95 border border-white/10 rounded-2xl p-6 shadow-[0_10px_50px_rgba(0,0,0,0.6)]"
+      className="absolute bottom-4 inset-x-4 md:bottom-6 md:left-6 md:right-auto z-20 md:w-full max-w-sm bg-[#070b19]/95 border border-white/10 rounded-2xl p-5 md:p-6 shadow-[0_10px_50px_rgba(0,0,0,0.6)] max-h-[60vh] overflow-y-auto scrollbar-thin"
     >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">

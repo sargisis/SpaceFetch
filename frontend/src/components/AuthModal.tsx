@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Copy, Check, Shield, Mail, Key, Sparkles, AlertCircle } from 'lucide-react';
 import { getApiUrl } from '../config';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -13,11 +14,12 @@ interface AuthModalProps {
 type Tab = 'login' | 'register' | 'recover';
 
 export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess }: AuthModalProps) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<Tab>(defaultTab);
   const [email, setEmail] = useState('');
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [tier] = useState<'free' | 'premium'>('free'); // Default to free as subscriptions are removed
-  
+
   // Registration success state
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -52,7 +54,9 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.message || 'Registration failed');
+        // Server rejected the request — show a real error, never a mock key
+        setErrorMsg(res.status === 409 ? t('auth.errorEmailTaken') : data.message || t('auth.errorGeneric'));
+        return;
       }
 
       setGeneratedKey(data.api_key);
@@ -61,9 +65,9 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
         apiKey: data.api_key,
         tier: data.tier,
       });
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      // Fallback mock registration if backend server is not running
+      // Network failure only — backend unreachable, offer a local demo key
       const mockKey = `sf_live_mock_${Math.random().toString(16).substring(2, 10)}${Math.random().toString(16).substring(2, 10)}`;
       setGeneratedKey(mockKey);
       onLoginSuccess({
@@ -71,7 +75,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
         apiKey: mockKey,
         tier,
       });
-      setInfoMsg("Offline fallback mode: generated a local mock API key.");
+      setInfoMsg(t('auth.offlineMode'));
     } finally {
       setLoading(false);
     }
@@ -101,7 +105,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
         });
         onClose();
       } else {
-        setErrorMsg('Invalid API Key. Please make sure the backend is active.');
+        setErrorMsg(t('auth.errorInvalidKey'));
       }
     } catch (err) {
       // Local fallback login
@@ -121,7 +125,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
     if (!email) return;
     setLoading(true);
     setTimeout(() => {
-      setInfoMsg("API keys are securely hashed using SHA-256 in our database. We've sent a list of your metadata to your inbox. You can register a new key.");
+      setInfoMsg(t('auth.recoverInfo'));
       setLoading(false);
     }, 800);
   };
@@ -167,7 +171,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
 
             {/* Main Modal body */}
             <div className="bg-[#070b19]/95 p-8 rounded-2xl relative">
-              
+
               {/* Close Button */}
               <button
                 onClick={onClose}
@@ -180,7 +184,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
               {!generatedKey && (
                 <div className="relative flex p-1 bg-black/50 border border-white/5 rounded-xl mb-6 select-none">
                   {(['login', 'register', 'recover'] as Tab[]).map((tab) => {
-                    const label = tab === 'login' ? 'Sign In' : tab === 'register' ? 'Sign Up' : 'Forgot Key';
+                    const label = tab === 'login' ? t('auth.tabSignIn') : tab === 'register' ? t('auth.tabSignUp') : t('auth.tabRecover');
                     const isActive = activeTab === tab;
                     return (
                       <button
@@ -212,18 +216,18 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
               {!generatedKey && (
                 <div className="mb-6">
                   <h3 className="text-xl font-bold font-heading text-white tracking-wide">
-                    {activeTab === 'login' 
-                      ? 'Welcome Back' 
-                      : activeTab === 'register' 
-                      ? 'Get API Access' 
-                      : 'Recover Access Key'}
+                    {activeTab === 'login'
+                      ? t('auth.titleLogin')
+                      : activeTab === 'register'
+                      ? t('auth.titleRegister')
+                      : t('auth.titleRecover')}
                   </h3>
                   <p className="text-xs text-slate-400 font-body mt-1">
-                    {activeTab === 'login' 
-                      ? 'Enter your API key to access developer features.' 
-                      : activeTab === 'register' 
-                      ? 'Register with your email to obtain your API credentials.' 
-                      : 'API keys are encrypted. Enter email to receive instructions.'}
+                    {activeTab === 'login'
+                      ? t('auth.descLogin')
+                      : activeTab === 'register'
+                      ? t('auth.descRegister')
+                      : t('auth.descRecover')}
                   </p>
                 </div>
               )}
@@ -246,7 +250,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
               {activeTab === 'login' && !generatedKey && (
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">API KEY</label>
+                    <label className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">{t('auth.apiKeyLabel')}</label>
                     <div className="relative group focus-within:ring-1 focus-within:ring-accent/50 rounded-xl transition-all">
                       <Key className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500 group-focus-within:text-accent transition-colors" />
                       <input
@@ -261,7 +265,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">EMAIL (OPTIONAL)</label>
+                    <label className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">{t('auth.emailOptional')}</label>
                     <div className="relative group focus-within:ring-1 focus-within:ring-accent/50 rounded-xl transition-all">
                       <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500 group-focus-within:text-accent transition-colors" />
                       <input
@@ -279,7 +283,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
                     disabled={loading}
                     className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 via-primary to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white font-semibold text-xs tracking-wider uppercase transition-all duration-300 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(34,211,238,0.5)] border border-cyan-400/20 cursor-pointer disabled:opacity-50"
                   >
-                    {loading ? 'Verifying Credentials...' : 'Sign In to Console'}
+                    {loading ? t('auth.signInLoading') : t('auth.signInBtn')}
                   </button>
                 </form>
               )}
@@ -288,7 +292,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
               {activeTab === 'register' && !generatedKey && (
                 <form onSubmit={handleRegister} className="space-y-5">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">EMAIL ADDRESS</label>
+                    <label className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">{t('auth.emailLabel')}</label>
                     <div className="relative group focus-within:ring-1 focus-within:ring-accent/50 rounded-xl transition-all">
                       <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500 group-focus-within:text-accent transition-colors" />
                       <input
@@ -303,7 +307,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
                   </div>
 
                   <div className="px-4 py-3 rounded-xl border border-white/5 bg-white/[0.01] text-[11px] text-slate-400 font-body leading-relaxed">
-                    By requesting a free API Key, you gain instant access to normalizations of active NASA feeds with a default limit of 5 requests per second.
+                    {t('auth.freeNote')}
                   </div>
 
                   <button
@@ -311,7 +315,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
                     disabled={loading}
                     className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 via-primary to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white font-semibold text-xs tracking-wider uppercase transition-all duration-300 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(34,211,238,0.5)] border border-cyan-400/20 cursor-pointer disabled:opacity-50"
                   >
-                    {loading ? 'Generating API Access...' : 'Generate Free API Key'}
+                    {loading ? t('auth.registerLoading') : t('auth.registerBtn')}
                   </button>
                 </form>
               )}
@@ -320,7 +324,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
               {activeTab === 'recover' && !generatedKey && (
                 <form onSubmit={handleRecover} className="space-y-5">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">EMAIL ADDRESS</label>
+                    <label className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">{t('auth.emailLabel')}</label>
                     <div className="relative group focus-within:ring-1 focus-within:ring-accent/50 rounded-xl transition-all">
                       <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500 group-focus-within:text-accent transition-colors" />
                       <input
@@ -339,7 +343,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
                     disabled={loading}
                     className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 via-primary to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white font-semibold text-xs tracking-wider uppercase transition-all duration-300 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(34,211,238,0.5)] border border-cyan-400/20 cursor-pointer disabled:opacity-50"
                   >
-                    {loading ? 'Locating Metadata...' : 'Send Access Recovery'}
+                    {loading ? t('auth.recoverLoading') : t('auth.recoverBtn')}
                   </button>
                 </form>
               )}
@@ -353,9 +357,9 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
                       <span className="absolute inset-0 rounded-full border border-accent/40 animate-ping opacity-25" />
                       <Shield className="h-8 w-8 text-accent animate-pulse" />
                     </div>
-                    <h3 className="text-lg font-bold font-heading text-white">API Key Generated!</h3>
+                    <h3 className="text-lg font-bold font-heading text-white">{t('auth.keyGenerated')}</h3>
                     <p className="text-xs text-slate-400 font-body max-w-xs mx-auto mt-2 leading-relaxed">
-                      Copy your API access key below. For your security, this key cannot be recovered or shown again.
+                      {t('auth.keyGeneratedDesc')}
                     </p>
                   </div>
 
@@ -365,7 +369,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
                     <button
                       onClick={handleCopyKey}
                       className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-all cursor-pointer shrink-0"
-                      title="Copy to Clipboard"
+                      title={t('auth.copyTitle')}
                     >
                       {copied ? <Check className="h-4.5 w-4.5 text-emerald-400" /> : <Copy className="h-4.5 w-4.5" />}
                     </button>
@@ -374,14 +378,14 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
                   {/* Security disclaimer note */}
                   <div className="p-3.5 rounded-xl border border-amber-500/20 bg-amber-500/5 text-left text-[11px] text-amber-300/80 font-body leading-relaxed flex gap-2">
                     <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-500" />
-                    <span>Please save this key in a secure location. If you lose it, you will have to generate a new key as we only store hashed versions.</span>
+                    <span>{t('auth.saveWarning')}</span>
                   </div>
 
                   <button
                     onClick={onClose}
                     className="w-full py-3.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 font-semibold text-xs tracking-wider uppercase transition-all duration-300 cursor-pointer"
                   >
-                    Proceed to API Console
+                    {t('auth.proceedConsole')}
                   </button>
                 </div>
               )}

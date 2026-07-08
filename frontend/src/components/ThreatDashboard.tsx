@@ -243,9 +243,9 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
           </div>
           <div className="flex justify-between mt-2 text-[9px] font-mono text-slate-500">
             <span>0% — LOW</span>
-            <span>25% — MODERATE</span>
+            <span className="hidden sm:inline">25% — MODERATE</span>
             <span>50% — HIGH</span>
-            <span>75% — CRITICAL</span>
+            <span className="hidden sm:inline">75% — CRITICAL</span>
             <span>100%</span>
           </div>
         </div>
@@ -289,12 +289,12 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
               className={`rounded-xl border ${threat.border} ${threat.bg} ${threat.glow} overflow-hidden transition-all duration-300`}
             >
               {/* Main row */}
-              <div 
-                className="p-4 flex items-center gap-4 cursor-pointer hover:bg-white/[0.02] transition-colors"
+              <div
+                className="p-3 md:p-4 flex items-center gap-3 md:gap-4 cursor-pointer hover:bg-white/[0.02] transition-colors"
                 onClick={() => setExpandedId(isExpanded ? null : ast.id)}
               >
-                {/* Rank */}
-                <div className="text-lg font-bold font-mono text-slate-600 w-8 text-center shrink-0">
+                {/* Rank — hidden on narrow screens to give metrics room */}
+                <div className="hidden sm:block text-lg font-bold font-mono text-slate-600 w-8 text-center shrink-0">
                   #{index + 1}
                 </div>
 
@@ -329,7 +329,7 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-4 text-[10px] font-mono text-slate-400">
+                  <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-[10px] font-mono text-slate-400">
                     <span className="flex items-center gap-1">
                       <Ruler className="h-3 w-3 text-slate-500" />
                       {ast.metrics.diameter_meters.toFixed(0)}m
