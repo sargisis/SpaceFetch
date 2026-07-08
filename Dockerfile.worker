@@ -4,16 +4,14 @@
 FROM golang:1.26-alpine AS builder
 WORKDIR /app
 
-# Copy dependency files and download
 COPY go.mod go.sum ./
-RUN --mount=type=cache,target=/go/pkg/mod go mod download
+# Vendored modules: the build needs no network access for Go dependencies
+COPY vendor vendor
 
 # Copy source code and build (only what's needed)
 COPY cmd cmd
 COPY internal internal
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
-    CGO_ENABLED=0 GOOS=linux go build -o worker ./cmd/worker
+RUN CGO_ENABLED=0 GOOS=linux go build -mod=vendor -o worker ./cmd/worker
 
 # Stage 2: Runtime image
 FROM alpine:3.20
