@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { getApiUrl } from '../config';
+import type { SessionUser } from '../types';
 const ThreatDashboard = lazy(() => import('./ThreatDashboard'));
 
 interface AsteroidData {
@@ -39,14 +40,15 @@ interface AsteroidData {
 }
 
 interface ConsolePageProps {
-  user: { email: string; apiKey: string; tier: string };
+  user: SessionUser;
   onGoHome: () => void;
+  onApiKeyChange?: (key: string) => void;
 }
 
 type Tab = 'space' | 'threat' | 'credentials' | 'logs' | 'docs';
 type SnippetTab = 'curl' | 'powershell' | 'js' | 'python' | 'go' | 'rust' | 'cpp';
 
-export default function ConsolePage({ user, onGoHome }: ConsolePageProps) {
+export default function ConsolePage({ user, onGoHome, onApiKeyChange }: ConsolePageProps) {
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<Tab>('space');
 
@@ -59,6 +61,7 @@ export default function ConsolePage({ user, onGoHome }: ConsolePageProps) {
   // Credentials states
   const [showKey, setShowKey] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
+  const [regenLoading, setRegenLoading] = useState(false);
   const [activeSnippetTab, setActiveSnippetTab] = useState<SnippetTab>('curl');
   const [copiedSnippet, setCopiedSnippet] = useState(false);
 
@@ -99,11 +102,10 @@ export default function ConsolePage({ user, onGoHome }: ConsolePageProps) {
       })
       .catch((err) => console.error('Failed to fetch EPIC', err));
 
-    // 3. Fetch Asteroids from Local Go Backend
+    // 3. Fetch Asteroids from Local Go Backend — authenticated by the
+    // httpOnly session cookie (the raw API key may not be in memory)
     fetch(getApiUrl('/v1/asteroids/today'), {
-      headers: {
-        'X-API-Key': user.apiKey
-      }
+      credentials: 'include',
     })
       .then((res) => res.json())
       .then((resData) => {
@@ -117,7 +119,7 @@ export default function ConsolePage({ user, onGoHome }: ConsolePageProps) {
       .finally(() => {
         setLoadingSpace(false);
       });
-  }, [activeTab, user.apiKey]);
+  }, [activeTab]);
 
   // Handle simulated ground-control log feeds
   useEffect(() => {
@@ -157,10 +159,34 @@ export default function ConsolePage({ user, onGoHome }: ConsolePageProps) {
     }
   }, [logs]);
 
+  // The raw key is only available in memory right after registration or
+  // rotation; otherwise snippets show a placeholder.
+  const displayKey = user.apiKey ?? 'YOUR_API_KEY';
+
   const handleCopyKey = () => {
+    if (!user.apiKey) return;
     navigator.clipboard.writeText(user.apiKey);
     setCopiedKey(true);
     setTimeout(() => setCopiedKey(false), 2000);
+  };
+
+  const handleRegenerateKey = async () => {
+    setRegenLoading(true);
+    try {
+      const res = await fetch(getApiUrl('/v1/auth/regenerate-key'), {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (res.ok && data.api_key) {
+        onApiKeyChange?.(data.api_key);
+        setShowKey(true);
+      }
+    } catch (err) {
+      console.error('Failed to regenerate API key', err);
+    } finally {
+      setRegenLoading(false);
+    }
   };
 
   const getSnippet = () => {
@@ -238,7 +264,7 @@ int main() {
     if(curl) {
         curl_easy_setopt(curl, CURLOPT_URL, "${endpoint}");
         struct curl_slist* headers = NULL;
-        headers = curl_slist_append(headers, "X-API-Key: ${user.apiKey}");
+        headers = curl_slist_append(headers, "X-API-Key: ${displayKey}");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
         CURLcode res = curl_easy_perform(curl);
@@ -555,25 +581,41 @@ int main() {
               <label className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">{t('console.keyLabel')}</label>
               <div className="p-4 rounded-xl border border-accent/20 bg-accent/5 flex items-center justify-between font-mono text-xs text-accent shadow-[inset_0_1px_15px_rgba(34,211,238,0.05)]">
                 <span className="truncate mr-4 font-semibold select-all">
-                  {showKey ? user.apiKey : `sf_live_${'•'.repeat(24)}`}
+                  {showKey && user.apiKey ? user.apiKey : `sf_live_${'•'.repeat(24)}`}
                 </span>
                 <div className="flex items-center gap-2 shrink-0">
+                  {user.apiKey && (
+                    <>
+                      <button
+                        onClick={() => setShowKey(!showKey)}
+                        className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-all cursor-pointer"
+                        title={showKey ? "Hide API Key" : "Reveal API Key"}
+                      >
+                        {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                      <button
+                        onClick={handleCopyKey}
+                        className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-all cursor-pointer"
+                        title="Copy API Key"
+                      >
+                        {copiedKey ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                      </button>
+                    </>
+                  )}
                   <button
-                    onClick={() => setShowKey(!showKey)}
-                    className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-all cursor-pointer"
-                    title={showKey ? "Hide API Key" : "Reveal API Key"}
+                    onClick={handleRegenerateKey}
+                    disabled={regenLoading}
+                    className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-all cursor-pointer text-[10px] uppercase tracking-wider disabled:opacity-50"
                   >
-                    {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                  <button
-                    onClick={handleCopyKey}
-                    className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-all cursor-pointer"
-                    title="Copy API Key"
-                  >
-                    {copiedKey ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                    {regenLoading ? '...' : t('console.regenerateKey')}
                   </button>
                 </div>
               </div>
+              {!user.apiKey && (
+                <p className="text-[11px] text-slate-500 font-body leading-relaxed">
+                  {t('console.keyHiddenNote')}
+                </p>
+              )}
             </div>
 
             {/* Quick Integration code blocks */}

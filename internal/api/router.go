@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/sargisis/spacefetch/internal/cache"
 	"github.com/sargisis/spacefetch/internal/database"
@@ -15,7 +16,7 @@ type spaHandler struct {
 	staticPath string
 	indexPath  string
 }
-
+// ServeHTTP serves static files and falls back to index.html for SPA routes.
 func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Join path with staticPath
 	path := filepath.Join(h.staticPath, r.URL.Path)
@@ -45,9 +46,21 @@ func NewRouter(db *database.MongoDB, rcache *cache.RedisCache, nasaCli *nasa.Cli
 
 	mux := http.NewServeMux()
 
-	// 1. Public Endpoints - health check and developer registration
+	// 1. Public Endpoints - health check and developer registration.
+	// Registration and login are IP-rate-limited so they can't be scripted
+	// to flood the database or brute-force passwords.
+	registerLimit := IPRateLimitMiddleware(rcache, "register", 5, time.Minute)
+	loginLimit := IPRateLimitMiddleware(rcache, "login", 10, time.Minute)
+
 	mux.HandleFunc("GET /health", h.HealthCheck)
-	mux.HandleFunc("POST /v1/users", h.RegisterUser)
+	mux.Handle("POST /v1/users", registerLimit(http.HandlerFunc(h.RegisterUser)))
+
+	// Cookie-session auth for the web console
+	mux.Handle("POST /v1/auth/register", registerLimit(http.HandlerFunc(h.AuthRegister)))
+	mux.Handle("POST /v1/auth/login", loginLimit(http.HandlerFunc(h.AuthLogin)))
+	mux.HandleFunc("POST /v1/auth/logout", h.AuthLogout)
+	mux.HandleFunc("GET /v1/auth/me", h.AuthMe)
+	mux.HandleFunc("POST /v1/auth/regenerate-key", h.AuthRegenerateKey)
 
 	// 2. Protected Mux
 	protectedMux := http.NewServeMux()
@@ -58,7 +71,7 @@ func NewRouter(db *database.MongoDB, rcache *cache.RedisCache, nasaCli *nasa.Cli
 	// Wrap protected endpoints with Auth and RateLimit middlewares
 	var protectedHandler http.Handler = protectedMux
 	protectedHandler = RateLimitMiddleware(rcache)(protectedHandler)
-	protectedHandler = AuthMiddleware(db, rcache)(protectedHandler)
+	protectedHandler = h.AuthMiddleware()(protectedHandler)
 
 	// Mount protected handler
 	mux.Handle("/v1/asteroids/", protectedHandler)

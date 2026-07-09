@@ -186,7 +186,8 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	hashedKey := hashAPIKey(apiKey)
 
-	user, err := h.db.CreateUser(r.Context(), req.Email, hashedKey, tier)
+	// Key-only developer account: no password, no console session
+	user, err := h.db.CreateUser(r.Context(), req.Email, hashedKey, "", tier)
 	if err != nil {
 		writeError(w, http.StatusConflict, "email already registered")
 		return
