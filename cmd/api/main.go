@@ -33,7 +33,7 @@ func main() {
 
 	nasaCli := nasa.NewClient(cfg.NASAAPIKey)
 
-	router := api.NewRouter(mdb, rcache, nasaCli, cfg.FrontendDir)
+	router := api.NewRouter(mdb, rcache, nasaCli, cfg.FrontendDir, cfg.SecureCookies)
 
 	server := &http.Server{
 		Addr:    ":" + cfg.APIPort,

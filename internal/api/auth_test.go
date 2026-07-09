@@ -39,7 +39,7 @@ func TestAuthenticationFlow(t *testing.T) {
 	db, _ = database.NewMongoDB("mongodb://localhost:27017", "spacefetch_test")
 
 	// Set up router
-	router := NewRouter(db, rcache, nasa.NewClient("DEMO_KEY"), "")
+	router := NewRouter(db, rcache, nasa.NewClient("DEMO_KEY"), "", false)
 
 	// Step 1: Register a new user (unique email per run — the test DB persists)
 	regReq := models.UserRegisterRequest{
@@ -153,7 +153,7 @@ func TestSessionAuthFlow(t *testing.T) {
 	}
 	defer rcache.Close()
 
-	router := NewRouter(db, rcache, "", false)
+	router := NewRouter(db, rcache, nasa.NewClient("DEMO_KEY"), "", false)
 
 	email := fmt.Sprintf("console%d@spacefetch.com", time.Now().UnixNano())
 	password := "supersecret123"

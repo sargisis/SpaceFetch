@@ -65,6 +65,9 @@ type MiningEconomy struct {
 	EstimatedValueUSD int64    `json:"estimated_value_usd" bson:"estimated_value_usd"`
 	PrimaryMaterials  []string `json:"primary_materials" bson:"primary_materials"`
 	MiningDifficulty  string   `json:"mining_difficulty" bson:"mining_difficulty"`
+	// SpectralClass is the assumed composition type: C (carbonaceous),
+	// S (silicaceous) or M (metallic)
+	SpectralClass string `json:"spectral_class" bson:"spectral_class"`
 }
 
 // APOD — NASA Astronomy Picture of the Day (normalized)

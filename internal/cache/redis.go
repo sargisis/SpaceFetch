@@ -84,6 +84,33 @@ func (r *RedisCache) GetUserCache(ctx context.Context, hashedKey string) (*model
 	return &user, true, nil
 }
 
+// Sessions (web console) — sessionID -> email with a sliding TTL
+
+func (r *RedisCache) CreateSession(ctx context.Context, sessionID, email string, ttl time.Duration) error {
+	return r.cli.Set(ctx, "session:"+sessionID, email, ttl).Err()
+}
+
+func (r *RedisCache) GetSession(ctx context.Context, sessionID string) (string, bool, error) {
+	email, err := r.cli.Get(ctx, "session:"+sessionID).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return "", false, nil
+		}
+		return "", false, err
+	}
+	return email, true, nil
+}
+
+func (r *RedisCache) DeleteSession(ctx context.Context, sessionID string) error {
+	return r.cli.Del(ctx, "session:"+sessionID).Err()
+}
+
+// DeleteUserCache drops the cached auth entry for a hashed API key so a
+// rotated or revoked key stops working immediately.
+func (r *RedisCache) DeleteUserCache(ctx context.Context, hashedKey string) error {
+	return r.cli.Del(ctx, fmt.Sprintf("user:%s", hashedKey)).Err()
+}
+
 // GetRaw / SetRaw cache arbitrary JSON payloads under a key (used for APOD/EPIC feeds).
 
 func (r *RedisCache) GetRaw(ctx context.Context, key string) ([]byte, bool, error) {

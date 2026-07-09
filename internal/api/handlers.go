@@ -25,10 +25,12 @@ type Handler struct {
 	db      *database.MongoDB
 	cache   *cache.RedisCache
 	nasaCli *nasa.Client
+	// secureCookies marks session cookies Secure (HTTPS-only) — enable in production
+	secureCookies bool
 }
 
-func NewHandler(db *database.MongoDB, cache *cache.RedisCache, nasaCli *nasa.Client) *Handler {
-	return &Handler{db: db, cache: cache, nasaCli: nasaCli}
+func NewHandler(db *database.MongoDB, cache *cache.RedisCache, nasaCli *nasa.Client, secureCookies bool) *Handler {
+	return &Handler{db: db, cache: cache, nasaCli: nasaCli, secureCookies: secureCookies}
 }
 
 func (h *Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {

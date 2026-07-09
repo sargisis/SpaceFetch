@@ -180,6 +180,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'threat.closeApproachDate': 'Close approach date',
     'threat.dataSource': 'Data source: NASA NeoWs (Near-Earth Object Web Service) · Processed by SpaceFetch Go Worker',
     'threat.objectsAnalyzed': 'objects analyzed',
+    'threat.spectralClass': 'Spectral class',
+    'threat.miningDisclaimer': 'Value is an educational estimate from a volumetric model (size × density × recoverable value per ton), not a market price.',
     'console.threatDashboard': 'Threat Dashboard',
 
     // Auth modal
@@ -379,6 +381,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'threat.closeApproachDate': 'Дата сближения',
     'threat.dataSource': 'Источник: NASA NeoWs · Обработка: SpaceFetch Go Worker',
     'threat.objectsAnalyzed': 'объектов проанализировано',
+    'threat.spectralClass': 'Спектральный класс',
+    'threat.miningDisclaimer': 'Стоимость — учебная оценка по объёмной модели (размер × плотность × ценность за тонну), а не рыночная цена.',
     'console.threatDashboard': 'Панель Угроз',
 
     // Auth modal
@@ -579,6 +583,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'threat.closeApproachDate': 'Data zbliżenia',
     'threat.dataSource': 'Źródło: NASA NeoWs · Przetwarzanie: SpaceFetch Go Worker',
     'threat.objectsAnalyzed': 'obiektów przeanalizowanych',
+    'threat.spectralClass': 'Klasa spektralna',
+    'threat.miningDisclaimer': 'Wartość to szacunek edukacyjny z modelu objętościowego (rozmiar × gęstość × wartość na tonę), a nie cena rynkowa.',
     'console.threatDashboard': 'Panel Zagrożeń',
 
     // Auth modal
@@ -779,6 +785,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'threat.closeApproachDate': 'Дата зближення',
     'threat.dataSource': 'Джерело: NASA NeoWs · Обробка: SpaceFetch Go Worker',
     'threat.objectsAnalyzed': 'об\'єктів проаналізовано',
+    'threat.spectralClass': 'Спектральний клас',
+    'threat.miningDisclaimer': 'Вартість — навчальна оцінка за об\'ємною моделлю (розмір × густина × цінність за тонну), а не ринкова ціна.',
     'console.threatDashboard': 'Панель Загроз',
 
     // Auth modal
@@ -979,6 +987,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'threat.closeApproachDate': 'Մոտեցման ամսաթիվ',
     'threat.dataSource': 'Աղբյուր՝ NASA NeoWs · Մշակում՝ SpaceFetch Go Worker',
     'threat.objectsAnalyzed': 'օբյեկտ վերլուծված',
+    'threat.spectralClass': 'Սպեկտրալ դաս',
+    'threat.miningDisclaimer': 'Արժեքը կրթական գնահատական է ծավալային մոդելով (չափ × խտություն × արժեք մեկ տոննայի համար), ոչ թե շուկայական գին։',
     'console.threatDashboard': 'Սպառնալիքների Վահանակ',
 
     // Auth modal
@@ -1179,6 +1189,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'threat.closeApproachDate': 'მიახლოების თარიღი',
     'threat.dataSource': 'წყარო: NASA NeoWs · დამუშავება: SpaceFetch Go Worker',
     'threat.objectsAnalyzed': 'ობიექტი გაანალიზებული',
+    'threat.spectralClass': 'სპექტრული კლასი',
+    'threat.miningDisclaimer': 'ღირებულება საგანმანათლებლო შეფასებაა მოცულობითი მოდელით (ზომა × სიმკვრივე × ღირებულება ტონაზე) და არა საბაზრო ფასი.',
     'console.threatDashboard': 'საფრთხის პანელი',
 
     // Auth modal
@@ -1379,6 +1391,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'threat.closeApproachDate': 'Annäherungsdatum',
     'threat.dataSource': 'Quelle: NASA NeoWs · Verarbeitung: SpaceFetch Go Worker',
     'threat.objectsAnalyzed': 'Objekte analysiert',
+    'threat.spectralClass': 'Spektralklasse',
+    'threat.miningDisclaimer': 'Der Wert ist eine edukative Schätzung nach einem volumetrischen Modell (Größe × Dichte × Wert pro Tonne), kein Marktpreis.',
     'console.threatDashboard': 'Bedrohungspanel',
 
     // Auth modal
@@ -1579,6 +1593,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'threat.closeApproachDate': 'Fecha de acercamiento',
     'threat.dataSource': 'Fuente: NASA NeoWs · Procesamiento: SpaceFetch Go Worker',
     'threat.objectsAnalyzed': 'objetos analizados',
+    'threat.spectralClass': 'Clase espectral',
+    'threat.miningDisclaimer': 'El valor es una estimación educativa según un modelo volumétrico (tamaño × densidad × valor por tonelada), no un precio de mercado.',
     'console.threatDashboard': 'Panel de Amenazas',
 
     // Auth modal
@@ -1779,6 +1795,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'threat.closeApproachDate': 'Date d\'approche',
     'threat.dataSource': 'Source: NASA NeoWs · Traitement: SpaceFetch Go Worker',
     'threat.objectsAnalyzed': 'objets analysés',
+    'threat.spectralClass': 'Classe spectrale',
+    'threat.miningDisclaimer': 'La valeur est une estimation éducative selon un modèle volumétrique (taille × densité × valeur par tonne), pas un prix de marché.',
     'console.threatDashboard': 'Panneau des Menaces',
 
     // Auth modal
