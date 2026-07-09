@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -135,6 +136,7 @@ func writeError(w http.ResponseWriter, status int, message string) {
 	})
 }
 // CORS middleware allows cross-origin requests from the configured frontend origin.
+// Supports exact matches and wildcard subdomain matching (e.g. *.example.com).
 
 func CORS(next http.Handler) http.Handler {
 	// ALLOWED_ORIGIN is a comma-separated list; local dev origins are always allowed
@@ -144,18 +146,33 @@ func CORS(next http.Handler) http.Handler {
 		"http://localhost:8080": true,
 		"http://127.0.0.1:8080": true,
 	}
+	var domainSuffixes []string
 	for _, o := range strings.Split(os.Getenv("ALLOWED_ORIGIN"), ",") {
 		if o = strings.TrimSpace(o); o != "" {
 			allowed[o] = true
+			// Also allow subdomains by storing the origin host for suffix matching
+			if u, err := url.Parse(o); err == nil && u.Host != "" {
+				domainSuffixes = append(domainSuffixes, "."+u.Host)
+			}
 		}
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
 
-		// Only allow requests from configured frontend origins
 		if allowed[origin] {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
+		} else if origin != "" {
+			// Check subdomain match: origin is allowed if its host ends with
+			// a known domain suffix (e.g. app.example.com -> .example.com)
+			if u, err := url.Parse(origin); err == nil && u.Host != "" {
+				for _, suffix := range domainSuffixes {
+					if strings.HasSuffix(u.Host, suffix) {
+						w.Header().Set("Access-Control-Allow-Origin", origin)
+						break
+					}
+				}
+			}
 		}
 
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
