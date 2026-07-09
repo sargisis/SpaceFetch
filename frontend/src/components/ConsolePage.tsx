@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { getApiUrl } from '../config';
-import type { SessionUser } from '../types';
+import type { SessionUser, APODData, EPICData, EPICDisplay } from '../types';
 const ThreatDashboard = lazy(() => import('./ThreatDashboard'));
 
 interface AsteroidData {
@@ -53,8 +53,8 @@ export default function ConsolePage({ user, onGoHome, onApiKeyChange }: ConsoleP
   const [activeTab, setActiveTab] = useState<Tab>('space');
 
   // Space Observatories states
-  const [apod, setApod] = useState<any>(null);
-  const [epic, setEpic] = useState<any>(null);
+  const [apod, setApod] = useState<APODData | null>(null);
+  const [epic, setEpic] = useState<EPICDisplay | null>(null);
   const [asteroids, setAsteroids] = useState<AsteroidData[]>([]);
   const [loadingSpace, setLoadingSpace] = useState(true);
 

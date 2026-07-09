@@ -8,3 +8,28 @@ export interface SessionUser {
   tier: string;
   apiKey?: string;
 }
+
+export interface APODData {
+  date: string;
+  title: string;
+  explanation: string;
+  media_type: string;
+  url: string;
+  hd_url?: string;
+  copyright?: string;
+}
+
+export interface EPICData {
+  date: string;
+  caption: string;
+  image_url: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface EPICDisplay {
+  date: string;
+  lat: number;
+  lon: number;
+  imgUrl: string;
+}
