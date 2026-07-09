@@ -16,11 +16,11 @@
 
 <br/>
 
-> **SpaceFetch** is a high-performance web service that scrapes, cleans, and normalizes raw feeds from NASA APIs _(NeoWs, APOD, EPIC)_ — serving them through a blazing-fast, cached API endpoint with AI-generated summaries powered by **Groq (Llama 3.3 70B)**.
+> **SpaceFetch** — высокопроизводительный веб-сервис, который собирает, очищает и нормализует сырые данные NASA _(NeoWs, APOD, EPIC)_ и отдаёт их через единый кешируемый API с AI-сводками на **9 языках**, работающими на **Groq (Llama 3.3 70B)**.
 
 <br/>
 
-[🚀 Quick Start](#-quick-start-1) · [📡 API Docs](#-api-specification) · [🌍 Languages](#-supported-languages) · [📐 Architecture](#-architecture-flow)
+[🚀 Quick Start](#-quick-start) · [📡 API Docs](#-api-specification) · [🌍 Languages](#-supported-languages) · [📐 Architecture](#-architecture-flow)
 
 ---
 
@@ -32,86 +32,31 @@
 
 <div align="center">
 
-SpaceFetch speaks your language. The entire interface is fully localized in **9 languages** with automatic browser detection and instant switching.
+The entire interface and AI-generated asteroid summaries are fully localized in **9 languages** with automatic browser detection. Switch anytime via the dropdown in the header.
 
 <br/>
 
 <table>
   <tr>
-    <td align="center" width="200">
-      <img src="https://flagcdn.com/48x36/us.png" width="48" height="36" alt="English"/>
-      <br/>
-      <strong>🇺🇸 English</strong>
-      <br/>
-      <code>en</code>
-    </td>
-    <td align="center" width="200">
-      <img src="https://flagcdn.com/48x36/ru.png" width="48" height="36" alt="Russian"/>
-      <br/>
-      <strong>🇷🇺 Русский</strong>
-      <br/>
-      <code>ru</code>
-    </td>
-    <td align="center" width="200">
-      <img src="https://flagcdn.com/48x36/pl.png" width="48" height="36" alt="Polish"/>
-      <br/>
-      <strong>🇵🇱 Polski</strong>
-      <br/>
-      <code>pl</code>
-    </td>
+    <td align="center" width="200"><strong>🇺🇸 English</strong><br/><code>en</code></td>
+    <td align="center" width="200"><strong>🇷🇺 Русский</strong><br/><code>ru</code></td>
+    <td align="center" width="200"><strong>🇵🇱 Polski</strong><br/><code>pl</code></td>
   </tr>
   <tr>
-    <td align="center" width="200">
-      <img src="https://flagcdn.com/48x36/ua.png" width="48" height="36" alt="Ukrainian"/>
-      <br/>
-      <strong>🇺🇦 Українська</strong>
-      <br/>
-      <code>uk</code>
-    </td>
-    <td align="center" width="200">
-      <img src="https://flagcdn.com/48x36/am.png" width="48" height="36" alt="Armenian"/>
-      <br/>
-      <strong>🇦🇲 Հայերեն</strong>
-      <br/>
-      <code>hy</code>
-    </td>
-    <td align="center" width="200">
-      <img src="https://flagcdn.com/48x36/ge.png" width="48" height="36" alt="Georgian"/>
-      <br/>
-      <strong>🇬🇪 ქართული</strong>
-      <br/>
-      <code>ka</code>
-    </td>
+    <td align="center" width="200"><strong>🇺🇦 Українська</strong><br/><code>uk</code></td>
+    <td align="center" width="200"><strong>🇦🇲 Հայերեն</strong><br/><code>hy</code></td>
+    <td align="center" width="200"><strong>🇬🇪 ქართული</strong><br/><code>ka</code></td>
   </tr>
   <tr>
-    <td align="center" width="200">
-      <img src="https://flagcdn.com/48x36/de.png" width="48" height="36" alt="German"/>
-      <br/>
-      <strong>🇩🇪 Deutsch</strong>
-      <br/>
-      <code>de</code>
-    </td>
-    <td align="center" width="200">
-      <img src="https://flagcdn.com/48x36/es.png" width="48" height="36" alt="Spanish"/>
-      <br/>
-      <strong>🇪🇸 Español</strong>
-      <br/>
-      <code>es</code>
-    </td>
-    <td align="center" width="200">
-      <img src="https://flagcdn.com/48x36/fr.png" width="48" height="36" alt="French"/>
-      <br/>
-      <strong>🇫🇷 Français</strong>
-      <br/>
-      <code>fr</code>
-    </td>
+    <td align="center" width="200"><strong>🇩🇪 Deutsch</strong><br/><code>de</code></td>
+    <td align="center" width="200"><strong>🇪🇸 Español</strong><br/><code>es</code></td>
+    <td align="center" width="200"><strong>🇫🇷 Français</strong><br/><code>fr</code></td>
   </tr>
 </table>
 
 <br/>
 
-> 💡 **Auto-detection** — SpaceFetch automatically detects your browser language and switches to it.  
-> Your preference is saved in `localStorage` for instant recall on every visit.
+> 💡 **Auto-detection** — язык определяется из `navigator.language`, сохраняется в `localStorage`. Переключение — в хедере справа, иконка 🌐.
 
 </div>
 
@@ -126,43 +71,43 @@ SpaceFetch speaks your language. The entire interface is fully localized in **9 
 <table>
   <tr>
     <td>🔭</td>
-    <td><strong>NASA Data Pipeline</strong></td>
-    <td>Real-time ingestion from NeoWs with automated background workers and AI enrichment</td>
+    <td><strong>NASA NeoWs Pipeline</strong></td>
+    <td>Ежедневный сбор астероидов с NASA API, обогащение метриками и AI-сводками</td>
   </tr>
   <tr>
     <td>🤖</td>
     <td><strong>AI Summaries</strong></td>
-    <td>Groq-powered Llama 3.3 70B generates intelligent summaries for every space object</td>
+    <td>Groq (Llama 3.3 70B) генерирует сводку для каждого астероида на всех 9 языках</td>
   </tr>
   <tr>
     <td>⚡</td>
     <td><strong>Redis Caching</strong></td>
-    <td>Sub-millisecond response times with intelligent cache invalidation</td>
+    <td>Sub-millisecond response times — кеш греется автоматически после каждого воркера</td>
   </tr>
   <tr>
     <td>🌐</td>
-    <td><strong>3D WebGL Landing</strong></td>
-    <td>Interactive Earth scene with Three.js, React Three Fiber, and glassmorphic widgets</td>
+    <td><strong>3D WebGL Earth</strong></td>
+    <td>Интерактивная сцена с Three.js, React Three Fiber, астероидным поясом и bloom</td>
   </tr>
   <tr>
     <td>🔑</td>
-    <td><strong>Instant API Keys</strong></td>
-    <td>One-click registration with email — start querying space data in seconds</td>
+    <td><strong>Dual Auth</strong></td>
+    <td>API-ключи для внешних разработчиков + httpOnly cookie-сессии для веб-консоли</td>
   </tr>
   <tr>
     <td>🌍</td>
     <td><strong>9 Languages</strong></td>
-    <td>Full i18n with auto-detection and persistent language preferences</td>
+    <td>Полная локализация интерфейса и AI-сводок с автоопределением языка</td>
   </tr>
   <tr>
     <td>💎</td>
     <td><strong>Mining Economics</strong></td>
-    <td>Asteroid valuation with material composition and mining difficulty analysis</td>
+    <td>Оценка стоимости астероидов по спектральному классу, составу и сложности добычи</td>
   </tr>
   <tr>
     <td>📊</td>
-    <td><strong>Developer Console</strong></td>
-    <td>Live API testing with real-time response visualization and terminal aesthetics</td>
+    <td><strong>Threat Dashboard</strong></td>
+    <td>Дашборд угроз с композитным скорингом, сортировкой и AI-анализом</td>
   </tr>
 </table>
 
@@ -178,12 +123,12 @@ SpaceFetch speaks your language. The entire interface is fully localized in **9 
 
 | Layer | Technologies |
 |:---:|:---|
-| **Backend** | Go 1.22+ · net/http · MongoDB · Redis |
-| **Frontend** | React 18 · Vite · TypeScript · Framer Motion |
-| **3D Engine** | Three.js · @react-three/fiber · @react-three/drei |
-| **AI** | Groq Cloud API · Llama 3.3 70B |
-| **Infra** | Docker Compose · Nginx · GitHub Actions |
-| **i18n** | Custom React Context + localStorage |
+| **Backend** | Go 1.22 · net/http (чистая stdlib) · MongoDB · Redis |
+| **Frontend** | React 18 · Vite · TypeScript · Framer Motion · Tailwind CSS |
+| **3D Engine** | Three.js · @react-three/fiber · @react-three/drei · postprocessing |
+| **AI** | Groq Cloud API · Llama 3.3 70B (fallback: встроенный генератор) |
+| **Infra** | Docker Compose · Multi-stage Dockerfile · Alpine |
+| **i18n** | React Context + localStorage · inline translations |
 
 </div>
 
@@ -197,14 +142,15 @@ SpaceFetch speaks your language. The entire interface is fully localized in **9 
 
 ```mermaid
 graph TD
-    NASA[🛰️ NASA API Feeds] -->|Raw Data JSON| Worker[⚙️ Go Background Worker]
-    Worker -->|Process & Normalize| AI[🤖 Groq Cloud AI Llama-3.3]
-    AI -->|Generate Summaries| Worker
-    Worker -->|Save Data| Mongo[(🗄️ MongoDB)]
-    API[🚀 Go API Server] -->|Query Check| RedisCache[(⚡ Redis Cache)]
-    RedisCache -.->|Miss| Mongo
-    API -->|Deliver Fast Response| Client([🌐 React Frontend / Developers])
-    Client -->|Register & Auth| API
+    NASA[🛰️ NASA NeoWs API] -->|Raw JSON| Worker[⚙️ Go Worker]
+    Worker -->|Normalize + Enrich| AI[🤖 Groq Llama-3.3]
+    AI -->|9-language summaries| Worker
+    Worker -->|Upsert| Mongo[(🗄️ MongoDB)]
+    Worker -->|Warm| Redis[(⚡ Redis Cache)]
+    API[🚀 Go API Server] -->|Check| Redis
+    Redis -.->|Miss| Mongo
+    API -->|JSON Response| Client([🌐 React SPA / CLI / curl])
+    Client -->|API Key or Cookie| API
 ```
 
 <br/>
@@ -213,40 +159,21 @@ graph TD
 
 <br/>
 
-## ⚙️ Configuration & Environment
-
-Create a `.env` file in the root directory. You can copy the template from `.env.example`:
+## ⚙️ Configuration
 
 ```env
-# ═══════════════════════════════════════════
-#  🔑 NASA & AI Credentials
-# ═══════════════════════════════════════════
-NASA_API_KEY=YOUR_NASA_API_KEY
-GROQ_API_KEY=YOUR_GROQ_API_KEY
-
-# ═══════════════════════════════════════════
-#  🗄️ Database Connections
-# ═══════════════════════════════════════════
+NASA_API_KEY=DEMO_KEY            # https://api.nasa.gov (30 req/h)
+GROQ_API_KEY=                    # https://console.groq.com (пусто = fallback)
 MONGO_URI=mongodb://localhost:27017
 MONGO_DB=spacefetch
 REDIS_ADDR=localhost:6379
 REDIS_PASSWORD=
-
-# ═══════════════════════════════════════════
-#  ⚙️ Service Configuration
-# ═══════════════════════════════════════════
 API_PORT=8080
-WORKER_INTERVAL=6h
-CACHE_TTL=3600
-COOKIE_SECURE=false
-FRONTEND_DIR=./frontend/dist
-
-# ═══════════════════════════════════════════
-#  🌐 CORS & Allowed Origins
-# ═══════════════════════════════════════════
-# Localhost origins (5173, 8080) are always allowed.
-# Add your production URL(s), comma-separated:
-ALLOWED_ORIGIN=https://your-app.pages.dev
+WORKER_INTERVAL=6h               # Интервал синка астероидов
+CACHE_TTL=1h                     # TTL Redis-кеша
+COOKIE_SECURE=false              # true в production (HTTPS)
+FRONTEND_DIR=./frontend/dist     # Собранный фронтенд
+ALLOWED_ORIGIN=                  # Доп. CORS-origins (через запятую)
 ```
 
 <br/>
@@ -257,26 +184,21 @@ ALLOWED_ORIGIN=https://your-app.pages.dev
 
 ## 🚀 Quick Start
 
-### 🐳 Mode A: Docker Compose _(Recommended)_
-
-Launch the entire infrastructure — Go API, background worker, React frontend, MongoDB, and Redis — with a single command:
+### Docker (рекомендуется)
 
 ```bash
 ./run.sh docker
 ```
 
-> The script automatically handles missing permissions using `sudo` if necessary.
+Поднимает MongoDB, Redis, API, Worker и фронтенд. Всё в одном compose.
 
-### 💻 Mode B: Local Development
-
-Ensure you have local instances of MongoDB (port `27017`) and Redis (port `6379`) running, then:
+### Local dev
 
 ```bash
 ./run.sh local
 ```
 
-> Starts the Go API server, background worker, and React frontend dev server concurrently.  
-> Pressing `Ctrl+C` will gracefully shut down all processes.
+Требует локальных MongoDB (порт 27017) и Redis (порт 6379). Запускает API, Worker и Vite dev server.
 
 <br/>
 
@@ -286,60 +208,44 @@ Ensure you have local instances of MongoDB (port `27017`) and Redis (port `6379`
 
 ## 📡 API Specification
 
-All authenticated requests require the `X-API-Key` header (external clients) **or** the `sf_session` httpOnly cookie (web console). API keys are never accepted via query parameters — they would leak into logs and browser history.
+Аутентификация: через заголовок `X-API-Key` (внешние клиенты) **или** httpOnly cookie `sf_session` (веб-консоль). API-ключи никогда не принимаются через query-параметры.
 
 <br/>
 
-### 1️⃣ Register User _(Public, rate-limited per IP)_
-
-Key-only developer registration (no console access):
+### 1️⃣ Register Developer Key _(Public, IP-rate-limited)_
 
 ```
 POST /v1/users
 ```
 
-**Request Body:**
 ```json
-{
-  "email": "developer@spacefetch.dev",
-  "tier": "free"
-}
-```
-> `tier` is optional, defaults to `"free"`. Valid values: `"free"`, `"premium"`.
-
-**Response** `201 Created`:
-```json
-{
-  "status": "success",
-  "email": "developer@spacefetch.dev",
-  "api_key": "sf_live_a1b2c3d4...",
-  "tier": "free"
-}
+{"email": "dev@example.com", "tier": "free"}
 ```
 
-> ⚠️ The API key is returned **exactly once** and stored server-side only as a SHA-256 hash. Save it immediately.
+→ `201` + `{"api_key": "sf_live_..."}` (показывается **один раз**, хранится как SHA-256)
+
+> `tier` опционален: `"free"` | `"premium"`. Rate limit: 5/min per IP.
 
 <br/>
 
-### 🔐 Console Auth _(cookie sessions)_
+### 🔐 Console Auth (cookie sessions)
 
-The web console authenticates with an httpOnly, SameSite=Lax session cookie backed by Redis — nothing sensitive is stored in `localStorage`.
+Сессии на Redis, httpOnly cookie `sf_session`, SameSite=Lax.
 
 ```
-POST /v1/auth/register        {"email", "password", "tier"?}  → 201 + api_key (shown once) + session cookie
-POST /v1/auth/login           {"email", "password"}           → 200 + session cookie
-GET  /v1/auth/me                                              → 200 {"email", "tier"} | 401
-POST /v1/auth/regenerate-key  (session required)              → 200 + new api_key; the old key is revoked instantly
-POST /v1/auth/logout                                          → 200, session destroyed server-side
+POST /v1/auth/register        {email, password, tier?}        → 201 + api_key + cookie
+POST /v1/auth/login           {email, password}               → 200 + cookie
+GET  /v1/auth/me                                               → 200 {email, tier}
+POST /v1/auth/regenerate-key  (cookie required)                → 200 + новый api_key
+POST /v1/auth/logout          (cookie required)                → 200, сессия удалена
 ```
 
-- Passwords: min 8 characters, stored as bcrypt hashes.
-- `register` and `login` are rate-limited per IP (5/min and 10/min).
-- Set `COOKIE_SECURE=true` in production (HTTPS) so cookies are marked `Secure`.
+- Пароль: 8–72 символа, bcrypt
+- `/auth/register` и `/auth/login`: 10 запросов/min per IP
 
 <br/>
 
-### 2️⃣ Today's Asteroids _(Protected)_
+### 2️⃣ Today's Asteroids _(Auth required)_
 
 ```
 GET /v1/asteroids/today
@@ -370,8 +276,15 @@ GET /v1/asteroids/today
         "mining_difficulty": "low"
       },
       "ai_summary": {
-        "en": "Asteroid (2015 NG13) is a 45-meter space rock worth $4.5M in raw nickel/iron.",
-        "ru": "Астероид (2015 NG13) — 45-метровый камень оценочной стоимостью $4.5 млн."
+        "en": "A 45-meter asteroid worth $4.5M in nickel/iron.",
+        "ru": "45-метровый астероид стоимостью $4.5 млн.",
+        "pl": "...",
+        "uk": "...",
+        "hy": "...",
+        "ka": "...",
+        "de": "...",
+        "es": "...",
+        "fr": "..."
       }
     }
   ]
@@ -380,39 +293,18 @@ GET /v1/asteroids/today
 
 <br/>
 
-<br/>
-
 ---
 
 <br/>
-
-<div align="center">
-
-## 📊 API Response Flow
-
-```
-Client Request → Auth Check → Redis Cache
-                                 ↓ HIT → Return Cached (< 1ms)
-                                 ↓ MISS → MongoDB Query → Cache Result → Return (< 50ms)
-```
-
-</div>
-
-<br/>
-
----
-
-<br/>
-
-<div align="center">
 
 ## 🔒 Rate Limits
 
 | Tier | Requests | Window | Endpoints |
 |:---:|:---:|:---:|:---|
-| 🆓 **Free** | 5 | per second | Asteroids (NeoWs) |
+| 🆓 **Free** | 5 | per second | `/v1/asteroids/today` |
+| ⭐ **Premium** | 50 | per second | `/v1/asteroids/today` + priority |
 
-</div>
+- IP limits на регистрацию: 5/min (`/v1/users`), 10/min (`/v1/auth/*`)
 
 <br/>
 
@@ -420,19 +312,35 @@ Client Request → Auth Check → Redis Cache
 
 <br/>
 
-<div align="center">
-
 ## 🔒 Security
 
-</div>
+- **Security Headers** — CSP, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS (при HTTPS)
+- **CSRF** — проверка Origin/Referer на всех POST-эндпоинтах аутентификации
+- **Session Fixation** — регенерация session ID при каждом login/register
+- **Body Limit** — `MaxBytesReader` (1 MB) на всех входящих запросах
+- **httpOnly Cookies** — сессионная cookie недоступна из JavaScript
+- **SHA-256 API Keys** — ключи хешируются при хранении, отдаются один раз
+- **IP Rate Limiting** — троттлинг регистрации/логина по IP (atomic Lua в Redis)
+- **Connection Reuse** — drain HTTP-ответов перед `Close()` для переиспользования соединений
 
-- **CSP, HSTS, X-Frame-Options** — strict security headers on every response
-- **CSRF Protection** — Origin/Referer validation on all state-changing POST endpoints
-- **Session Fixation** — session ID is regenerated on every login
-- **Body Size Limit** — 1 MB `MaxBytesReader` on all request bodies
-- **httpOnly Cookies** — session cookie is never accessible from JavaScript
-- **SHA-256 API Keys** — keys are hashed at rest, returned exactly once
-- **IP Rate Limiting** — per-IP throttling on register (5/min) and login (10/min)
+<br/>
+
+---
+
+<br/>
+
+## 🔧 CLI Client
+
+В `cmd/spacefetch` — standalone CLI-клиент для работы с API из терминала:
+
+```
+spacefetch login          # Сохранить API-ключ
+spacefetch today          # Астероиды сегодня
+spacefetch apod           # APOD (резервировано)
+spacefetch epic           # EPIC (резервировано)
+```
+
+Поддерживает `--json`, `--lang`, `--save`, `--api`, `NO_COLOR`.
 
 <br/>
 
@@ -444,30 +352,44 @@ Client Request → Auth Check → Redis Cache
 
 ## 📁 Project Structure
 
-</div>
-
 ```
 SpaceFetch/
-├── 🔧 cmd/
-│   ├── api/            # API server entrypoint
-│   └── worker/         # Background data worker (NASA ingestion + AI)
-├── 📦 internal/
-│   ├── api/            # HTTP handlers, auth, middleware, router
-│   ├── config/         # Centralized env configuration
-│   ├── models/         # Shared data types & API contracts
-│   ├── database/       # MongoDB layer (CRUD, migrations)
-│   ├── cache/          # Redis caching layer
-│   ├── nasa/           # NASA HTTP client (NeoWs, APOD, EPIC)
-│   └── worker/         # Background job orchestration
-├── 🌐 frontend/
+├── cmd/
+│   ├── api/               # Точка входа API-сервера
+│   ├── worker/            # Фоновый воркер (NASA → AI → MongoDB)
+│   └── spacefetch/        # CLI-клиент
+├── internal/
+│   ├── api/               # HTTP-хендлеры, auth, middleware, router
+│   ├── config/            # Централизованная конфигурация из env
+│   ├── models/            # Go-модели данных
+│   ├── database/          # MongoDB (CRUD, индексы, CleanupTest)
+│   ├── cache/             # Redis (кеш, rate limiter, Lua-скрипты)
+│   ├── nasa/              # HTTP-клиент NASA (NeoWs, APOD, EPIC)
+│   └── worker/            # Оркестрация воркера (sync, enrichment)
+├── frontend/
 │   ├── src/
-│   │   ├── components/ # React UI components
-│   │   ├── i18n/       # 🌍 Translations & language context
-│   │   └── config.ts   # API endpoint helper
-│   └── public/         # Static assets
-├── 🐳 docker-compose.yml
-├── 📜 run.sh           # One-click launcher
-└── 📄 .env.example     # Environment template
+│   │   ├── components/    # 14 React-компонентов
+│   │   ├── i18n/          # 9 языков: контекст + переводы
+│   │   └── config.ts      # API endpoint resolver
+│   └── dist/              # Сборка (сгенерировано)
+├── docker-compose.yml
+├── run.sh                 # Запуск одной командой
+└── .env.example
+```
+
+</div>
+
+<br/>
+
+---
+
+<br/>
+
+## 📊 Response Flow
+
+```
+Client → Auth Check → Redis Cache → HIT → <1ms response
+                                    → MISS → MongoDB → Cache → response
 ```
 
 <br/>
@@ -480,14 +402,13 @@ SpaceFetch/
 
 ## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome!  
-Feel free to check the [issues page](https://github.com/sargisis/SpaceFetch/issues).
+[Issues](https://github.com/sargisis/SpaceFetch/issues) и PR приветствуются.
 
 <br/>
 
 ## 📄 License
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE).
 
 <br/>
 
