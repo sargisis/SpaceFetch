@@ -758,6 +758,7 @@ int main() {
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] px-2 py-0.5 rounded font-bold bg-primary/20 text-accent font-mono">GET</span>
                   <span className="text-xs font-mono font-semibold text-white">/v1/epic/latest</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono ml-2">v0.1.0</span>
                 </div>
                 <p className="text-xs text-slate-400 font-body font-light">
                   {t('console.docsEndpoint3Title')}

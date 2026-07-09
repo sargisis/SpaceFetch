@@ -93,6 +93,8 @@ func validatePassword(password string) (string, bool) {
 // AuthRegister handles POST /v1/auth/register: creates an account with a
 // password, returns the API key (shown exactly once) and starts a session.
 func (h *Handler) AuthRegister(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
 	var req models.AuthRegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -153,6 +155,8 @@ func (h *Handler) AuthRegister(w http.ResponseWriter, r *http.Request) {
 // AuthLogin handles POST /v1/auth/login: verifies email+password and starts
 // a cookie session. The API key is never returned here.
 func (h *Handler) AuthLogin(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
 	var req models.AuthLoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")

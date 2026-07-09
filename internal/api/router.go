@@ -66,7 +66,7 @@ func NewRouter(db *database.MongoDB, rcache *cache.RedisCache, nasaCli *nasa.Cli
 	protectedMux := http.NewServeMux()
 	protectedMux.HandleFunc("GET /v1/asteroids/today", h.GetTodayAsteroids)
 	protectedMux.HandleFunc("GET /v1/apod", h.GetAPOD)
-	protectedMux.HandleFunc("GET /v1/epic", h.GetEPIC)
+	protectedMux.HandleFunc("GET /v1/epic/latest", h.GetEPIC)
 
 	// Wrap protected endpoints with Auth and RateLimit middlewares
 	var protectedHandler http.Handler = protectedMux
@@ -76,7 +76,7 @@ func NewRouter(db *database.MongoDB, rcache *cache.RedisCache, nasaCli *nasa.Cli
 	// Mount protected handler
 	mux.Handle("/v1/asteroids/", protectedHandler)
 	mux.Handle("/v1/apod", protectedHandler)
-	mux.Handle("/v1/epic", protectedHandler)
+	mux.Handle("/v1/epic/", protectedHandler)
 
 	// 3. Serve Frontend static files if the directory exists
 	if frontendDir != "" {

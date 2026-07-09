@@ -14,11 +14,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
-	"syscall"
 	"time"
-	"unsafe"
 
 	"github.com/sargisis/spacefetch/internal/models"
 )
@@ -437,18 +434,4 @@ func wrap(s string, width int) string {
 	return b.String()
 }
 
-// enableANSI turns on VT escape-sequence processing in the classic Windows console.
-func enableANSI() {
-	if runtime.GOOS != "windows" {
-		return
-	}
-	k32 := syscall.NewLazyDLL("kernel32.dll")
-	getMode := k32.NewProc("GetConsoleMode")
-	setMode := k32.NewProc("SetConsoleMode")
-	h := syscall.Handle(os.Stdout.Fd())
-	var mode uint32
-	if r, _, _ := getMode.Call(uintptr(h), uintptr(unsafe.Pointer(&mode))); r != 0 {
-		const enableVT = 0x0004
-		setMode.Call(uintptr(h), uintptr(mode|enableVT))
-	}
-}
+

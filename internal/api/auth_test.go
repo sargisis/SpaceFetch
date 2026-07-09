@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -34,8 +35,8 @@ func TestAuthenticationFlow(t *testing.T) {
 	}
 	defer rcache.Close()
 
-	// Clean up previous test database collections & keys
-	_ = db.Close() // close connection before dropping, or just clean collections
+	// Clean up previous test database collections
+	db.CleanupTest(context.Background())
 	db, _ = database.NewMongoDB("mongodb://localhost:27017", "spacefetch_test")
 
 	// Set up router
