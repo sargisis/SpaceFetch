@@ -75,17 +75,31 @@ func (w *Worker) sync(ctx context.Context) error {
 
 	asteroids := make([]models.Asteroid, len(neos))
 	for i, neo := range neos {
-		a := nasa.Enrich(neo)
-		if w.aiCli != nil {
-			log.Printf("worker: generating AI summary for asteroid %s...", a.Name)
-			summaries, err := w.aiCli.GenerateSummaries(ctx, a, []string{"en", "ru", "pl", "uk", "hy", "ka", "de", "es", "fr"})
-			if err != nil {
-				log.Printf("worker: AI summary error for %s: %v", a.Name, err)
-			} else {
+		asteroids[i] = nasa.Enrich(neo)
+	}
+
+	// Generate AI summaries in parallel (max 5 concurrent requests)
+	if w.aiCli != nil {
+		sem := make(chan struct{}, 5)
+		var wg sync.WaitGroup
+
+		for i := range asteroids {
+			wg.Add(1)
+			sem <- struct{}{}
+			go func(a *models.Asteroid) {
+				defer wg.Done()
+				defer func() { <-sem }()
+
+				log.Printf("worker: generating AI summary for asteroid %s...", a.Name)
+				summaries, err := w.aiCli.GenerateSummaries(ctx, *a, []string{"en", "ru", "pl", "uk", "hy", "ka", "de", "es", "fr"})
+				if err != nil {
+					log.Printf("worker: AI summary error for %s: %v", a.Name, err)
+					return
+				}
 				a.AISummary = summaries
-			}
+			}(&asteroids[i])
 		}
-		asteroids[i] = a
+		wg.Wait()
 	}
 
 	log.Printf("worker: saving %d asteroids to MongoDB...", len(asteroids))
