@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { User, Languages, ChevronDown, Menu, X } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { languages } from '../i18n/translations';
+import type { SessionUser } from '../types';
 
 interface HeaderProps {
-  user: { email: string; apiKey: string; tier: string } | null;
+  user: SessionUser | null;
   onOpenAuth: (tab: 'login' | 'register') => void;
   onLogout: () => void;
   onOpenConsole: () => void;

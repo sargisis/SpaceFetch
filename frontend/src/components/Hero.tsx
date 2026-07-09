@@ -7,6 +7,7 @@ import AsteroidBelt from './AsteroidBelt';
 import RadarDetailsCard from './RadarDetailsCard';
 import { getApiUrl } from '../config';
 import { useLanguage } from '../i18n/LanguageContext';
+import type { SessionUser } from '../types';
 
 interface AsteroidData {
   id: string;
@@ -237,7 +238,7 @@ function Scene({ asteroids, selectedId, onSelectAsteroid, enableEffects }: Scene
 }
 
 interface HeroProps {
-  user: { email: string; apiKey: string; tier: string } | null;
+  user: SessionUser | null;
   onOpenAuth: (tab: 'login' | 'register') => void;
 }
 
@@ -252,11 +253,10 @@ export default function Hero({ user, onOpenAuth }: HeroProps) {
 
   useEffect(() => {
     if (user) {
-      // Fetch live normalizations from local Go backend API using user credentials
+      // Fetch live normalizations from local Go backend API — the httpOnly
+      // session cookie authenticates the request
       fetch(getApiUrl('/v1/asteroids/today'), {
-        headers: {
-          'X-API-Key': user.apiKey,
-        },
+        credentials: 'include',
       })
         .then((res) => {
           if (!res.ok) throw new Error('CORS or backend connection failed');

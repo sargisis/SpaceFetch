@@ -17,6 +17,9 @@ type Config struct {
 	WorkerInterval time.Duration
 	CacheTTL       time.Duration
 	FrontendDir    string
+	// SecureCookies marks session cookies as Secure (HTTPS-only). Keep it
+	// off for plain-HTTP access (e.g. via LAN IP), on in production.
+	SecureCookies bool
 }
 
 func Load() *Config {
@@ -32,6 +35,7 @@ func Load() *Config {
 		WorkerInterval: getDuration("WORKER_INTERVAL", 6*time.Hour),
 		CacheTTL:       getDuration("CACHE_TTL", 1*time.Hour),
 		FrontendDir:    getEnv("FRONTEND_DIR", "./frontend/dist"),
+		SecureCookies:  getEnv("COOKIE_SECURE", "false") == "true",
 	}
 }
 

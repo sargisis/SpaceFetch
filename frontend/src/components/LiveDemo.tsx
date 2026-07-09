@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Terminal, Copy, Check } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
+import type { SessionUser } from '../types';
 
 const demos = {
   neows: {
@@ -99,7 +100,7 @@ function TypewriterResponse({ text }: { text: string }) {
 }
 
 interface LiveDemoProps {
-  user: { email: string; apiKey: string; tier: string } | null;
+  user: SessionUser | null;
 }
 
 export default function LiveDemo({ user }: LiveDemoProps) {
@@ -154,7 +155,7 @@ export default function LiveDemo({ user }: LiveDemoProps) {
             <Terminal className="h-4 w-4 text-accent" />
             <span className="font-semibold text-accent font-mono">REQUEST:</span>
             <span className="text-slate-400 overflow-x-auto whitespace-nowrap scrollbar-none flex-1">
-              {demos[activeTab].request.replace('gsk_groq', user ? user.apiKey : 'gsk_groq')}
+              {demos[activeTab].request.replace('gsk_groq', user?.apiKey ?? 'gsk_groq')}
             </span>
           </div>
 
