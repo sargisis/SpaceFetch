@@ -11,7 +11,6 @@ import (
 
 	"github.com/sargisis/spacefetch/internal/cache"
 	"github.com/sargisis/spacefetch/internal/database"
-	"github.com/sargisis/spacefetch/internal/nasa"
 )
 
 func setupTestHandler(t *testing.T) (*Handler, *database.MongoDB, *cache.RedisCache) {
@@ -28,7 +27,7 @@ func setupTestHandler(t *testing.T) (*Handler, *database.MongoDB, *cache.RedisCa
 		t.Skip("Skipping: local Redis not available:", err)
 	}
 
-	return NewHandler(db, rcache, nasa.NewClient("DEMO_KEY"), false), db, rcache
+	return NewHandler(db, rcache, false), db, rcache
 }
 
 func TestHealthCheck(t *testing.T) {

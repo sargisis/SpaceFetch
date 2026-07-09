@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -19,7 +20,8 @@ type Config struct {
 	FrontendDir    string
 	// SecureCookies marks session cookies as Secure (HTTPS-only). Keep it
 	// off for plain-HTTP access (e.g. via LAN IP), on in production.
-	SecureCookies bool
+	SecureCookies  bool
+	AllowedOrigins []string
 }
 
 func Load() *Config {
@@ -36,6 +38,7 @@ func Load() *Config {
 		CacheTTL:       getDuration("CACHE_TTL", 1*time.Hour),
 		FrontendDir:    getEnv("FRONTEND_DIR", "./frontend/dist"),
 		SecureCookies:  getEnv("COOKIE_SECURE", "false") == "true",
+		AllowedOrigins: parseOrigins(getEnv("ALLOWED_ORIGIN", "")),
 	}
 }
 
@@ -44,6 +47,16 @@ func getEnv(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func parseOrigins(raw string) []string {
+	var out []string
+	for _, o := range strings.Split(raw, ",") {
+		if o = strings.TrimSpace(o); o != "" {
+			out = append(out, o)
+		}
+	}
+	return out
 }
 
 func getDuration(key string, fallback time.Duration) time.Duration {

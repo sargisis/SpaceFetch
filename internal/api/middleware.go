@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 
@@ -127,13 +126,14 @@ func RateLimitMiddleware(redisCache *cache.RedisCache) func(http.Handler) http.H
 	}
 }
 
-func writeError(w http.ResponseWriter, status int, message string) {
+func writeError(w http.ResponseWriter, status int, message string) string {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(models.ErrorResponse{
 		Status:  strings.ToLower(http.StatusText(status)),
 		Message: message,
 	})
+	return message
 }
 
 // originAllowed checks whether the given origin is in the allowed set or is a
@@ -188,63 +188,47 @@ func CSRFMiddleware(allowed map[string]bool, suffixes []string) func(http.Handle
 // CORS middleware allows cross-origin requests from the configured frontend origin.
 // Supports exact matches and wildcard subdomain matching (e.g. *.example.com).
 
-func CORS(next http.Handler) http.Handler {
-	// ALLOWED_ORIGIN is a comma-separated list; local dev origins are always allowed
-	allowed := map[string]bool{
-		"http://localhost:5173": true,
-		"http://127.0.0.1:5173": true,
-		"http://localhost:8080": true,
-		"http://127.0.0.1:8080": true,
-	}
-	var domainSuffixes []string
-	for _, o := range strings.Split(os.Getenv("ALLOWED_ORIGIN"), ",") {
-		if o = strings.TrimSpace(o); o != "" {
-			allowed[o] = true
-			// Also allow subdomains by storing the origin host for suffix matching
-			if u, err := url.Parse(o); err == nil && u.Host != "" {
-				domainSuffixes = append(domainSuffixes, "."+u.Host)
+func CORS(allowed map[string]bool, domainSuffixes []string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			origin := r.Header.Get("Origin")
+
+			if originAllowed(origin, allowed, domainSuffixes) {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
 			}
-		}
+
+			// Prevent cache poisoning when ACAO is dynamic
+			w.Header().Set("Vary", "Origin")
+
+			w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "X-API-Key, Content-Type")
+			// Let the Vite dev server (cross-origin) send the session cookie
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+			// Security headers
+			w.Header().Set("X-Content-Type-Options", "nosniff")
+			w.Header().Set("X-Frame-Options", "DENY")
+			w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+			w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), interest-cohort=()")
+			w.Header().Set("Content-Security-Policy",
+				"default-src 'self'; "+
+					"script-src 'self' 'unsafe-inline'; "+
+					"style-src 'self' 'unsafe-inline'; "+
+					"img-src 'self' data: https://apod.nasa.gov https://epic.gsfc.nasa.gov https://www.nasa.gov; "+
+					"font-src 'self' data:; "+
+					"connect-src 'self' http://localhost:* ws://localhost:*; "+
+					"frame-ancestors 'none'; "+
+					"form-action 'self'",
+			)
+			if r.TLS != nil {
+				w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
+			}
+
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
 	}
-
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		origin := r.Header.Get("Origin")
-
-		if originAllowed(origin, allowed, domainSuffixes) {
-			w.Header().Set("Access-Control-Allow-Origin", origin)
-		}
-
-		// Prevent cache poisoning when ACAO is dynamic
-		w.Header().Set("Vary", "Origin")
-
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "X-API-Key, Content-Type")
-		// Let the Vite dev server (cross-origin) send the session cookie
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-
-		// Security headers
-		w.Header().Set("X-Content-Type-Options", "nosniff")
-		w.Header().Set("X-Frame-Options", "DENY")
-		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
-		w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), interest-cohort=()")
-		w.Header().Set("Content-Security-Policy",
-			"default-src 'self'; "+
-				"script-src 'self' 'unsafe-inline'; "+
-				"style-src 'self' 'unsafe-inline'; "+
-				"img-src 'self' data: https://apod.nasa.gov https://epic.gsfc.nasa.gov https://www.nasa.gov; "+
-				"font-src 'self' data:; "+
-				"connect-src 'self' http://localhost:* ws://localhost:*; "+
-				"frame-ancestors 'none'; "+
-				"form-action 'self'",
-		)
-		if r.TLS != nil {
-			w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
-		}
-
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
 }

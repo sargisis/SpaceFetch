@@ -7,27 +7,7 @@ import AsteroidBelt from './AsteroidBelt';
 import RadarDetailsCard from './RadarDetailsCard';
 import { getApiUrl } from '../config';
 import { useLanguage } from '../i18n/LanguageContext';
-import type { SessionUser } from '../types';
-
-interface AsteroidData {
-  id: string;
-  name: string;
-  is_hazardous: boolean;
-  metrics: {
-    diameter_meters: number;
-    velocity_km_h: number;
-    miss_distance_km: number;
-  };
-  mining_economy: {
-    estimated_value_usd: number;
-    primary_materials: string[];
-    mining_difficulty: string;
-  };
-  ai_summary: {
-    en: string;
-    ru: string;
-  } | string;
-}
+import type { SessionUser, AsteroidData } from '../types';
 
 const mockAsteroids: AsteroidData[] = [
   {

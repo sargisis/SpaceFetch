@@ -1,26 +1,7 @@
 import { useRef, useMemo, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-
-interface AsteroidData {
-  id: string;
-  name: string;
-  is_hazardous: boolean;
-  metrics: {
-    diameter_meters: number;
-    velocity_km_h: number;
-    miss_distance_km: number;
-  };
-  mining_economy: {
-    estimated_value_usd: number;
-    primary_materials: string[];
-    mining_difficulty: string;
-  };
-  ai_summary: {
-    en: string;
-    ru: string;
-  } | string;
-}
+import type { AsteroidData } from '../types';
 
 interface AsteroidBeltProps {
   asteroids: AsteroidData[];
