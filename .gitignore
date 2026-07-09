@@ -2,6 +2,8 @@
 bin/
 /spacefetch.exe
 /spacefetch
+/api
+/worker
 
 # Local test downloads
 my-download.json

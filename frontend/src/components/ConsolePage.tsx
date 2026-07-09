@@ -16,28 +16,8 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { getApiUrl } from '../config';
-import type { SessionUser } from '../types';
+import type { SessionUser, APODData, EPICDisplay, AsteroidData } from '../types';
 const ThreatDashboard = lazy(() => import('./ThreatDashboard'));
-
-interface AsteroidData {
-  id: string;
-  name: string;
-  is_hazardous: boolean;
-  metrics: {
-    diameter_meters: number;
-    velocity_km_h: number;
-    miss_distance_km: number;
-  };
-  mining_economy: {
-    estimated_value_usd: number;
-    primary_materials: string[];
-    mining_difficulty: string;
-  };
-  ai_summary: {
-    en: string;
-    ru: string;
-  } | string;
-}
 
 interface ConsolePageProps {
   user: SessionUser;
@@ -53,8 +33,8 @@ export default function ConsolePage({ user, onGoHome, onApiKeyChange }: ConsoleP
   const [activeTab, setActiveTab] = useState<Tab>('space');
 
   // Space Observatories states
-  const [apod, setApod] = useState<any>(null);
-  const [epic, setEpic] = useState<any>(null);
+  const [apod, setApod] = useState<APODData | null>(null);
+  const [epic, setEpic] = useState<EPICDisplay | null>(null);
   const [asteroids, setAsteroids] = useState<AsteroidData[]>([]);
   const [loadingSpace, setLoadingSpace] = useState(true);
 
@@ -64,6 +44,9 @@ export default function ConsolePage({ user, onGoHome, onApiKeyChange }: ConsoleP
   const [regenLoading, setRegenLoading] = useState(false);
   const [activeSnippetTab, setActiveSnippetTab] = useState<SnippetTab>('curl');
   const [copiedSnippet, setCopiedSnippet] = useState(false);
+
+  // Image load error states
+  const [epicImgError, setEpicImgError] = useState(false);
 
   // Live log logs
   const [logs, setLogs] = useState<string[]>([]);
@@ -98,6 +81,7 @@ export default function ConsolePage({ user, onGoHome, onApiKeyChange }: ConsoleP
             lon: resData.data.longitude,
             imgUrl: resData.data.image_url,
           });
+          setEpicImgError(false);
         }
       })
       .catch((err) => console.error('Failed to fetch EPIC', err));
@@ -419,13 +403,18 @@ int main() {
                         <Camera className="h-4 w-4 text-accent animate-pulse" />
                         <span className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">{t('console.epicTitle')}</span>
                       </div>
-                      {epic?.imgUrl ? (
+                      {epic?.imgUrl && !epicImgError ? (
                         <div className="rounded-xl overflow-hidden max-h-[220px] border border-white/10 mb-4 bg-black flex items-center justify-center p-2">
-                          <img src={epic.imgUrl} alt="Live Earth View" className="w-[190px] h-[190px] object-cover animate-[spin_180s_linear_infinite]" />
+                          <img
+                            src={epic.imgUrl}
+                            alt="Live Earth View"
+                            className="w-[190px] h-[190px] object-cover animate-[spin_180s_linear_infinite]"
+                            onError={() => setEpicImgError(true)}
+                          />
                         </div>
                       ) : (
                         <div className="h-[180px] rounded-xl border border-dashed border-white/10 flex items-center justify-center text-slate-500 text-xs font-mono mb-4">
-                          Syncing Earth Feed...
+                          {epicImgError ? 'Earth imagery temporarily unavailable' : 'Syncing Earth Feed...'}
                         </div>
                       )}
                       <h4 className="text-sm font-bold text-white leading-snug">Full-Disk Color Earth Photograph</h4>
@@ -758,6 +747,7 @@ int main() {
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] px-2 py-0.5 rounded font-bold bg-primary/20 text-accent font-mono">GET</span>
                   <span className="text-xs font-mono font-semibold text-white">/v1/epic/latest</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono ml-2">v0.1.0</span>
                 </div>
                 <p className="text-xs text-slate-400 font-body font-light">
                   {t('console.docsEndpoint3Title')}

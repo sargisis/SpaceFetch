@@ -261,6 +261,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
                       <input
                         type="password"
                         required
+                        maxLength={72}
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -305,6 +306,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
                         type="password"
                         required
                         minLength={8}
+                        maxLength={72}
                         placeholder={t('auth.passwordPlaceholder')}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"hash/fnv"
+	"io"
 	"math"
 	"net/http"
 	"strconv"
@@ -43,7 +44,7 @@ func (c *Client) FetchToday() ([]models.NeoObject, error) {
 	if err != nil {
 		return nil, fmt.Errorf("nasa request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer drainAndClose(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("nasa returned status %d", resp.StatusCode)
@@ -64,7 +65,7 @@ func (c *Client) FetchAPOD() (*models.APOD, error) {
 	if err != nil {
 		return nil, fmt.Errorf("apod request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer drainAndClose(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("apod returned status %d", resp.StatusCode)
@@ -101,7 +102,7 @@ func (c *Client) FetchEPICLatest() (*models.EPICImage, error) {
 	if err != nil {
 		return nil, fmt.Errorf("epic request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer drainAndClose(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("epic returned status %d", resp.StatusCode)
@@ -236,6 +237,13 @@ func calculateEconomy(neo models.NeoObject) models.MiningEconomy {
 		MiningDifficulty:  difficulty,
 		SpectralClass:     class,
 	}
+}
+
+// drainAndClose drains the response body to allow connection reuse,
+// then closes it. Must be called via defer after every HTTP response.
+func drainAndClose(body io.ReadCloser) {
+	io.Copy(io.Discard, body)
+	body.Close()
 }
 
 // spectralClass deterministically assigns a composition class from the

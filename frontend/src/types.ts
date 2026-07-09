@@ -8,3 +8,50 @@ export interface SessionUser {
   tier: string;
   apiKey?: string;
 }
+
+export interface APODData {
+  date: string;
+  title: string;
+  explanation: string;
+  media_type: string;
+  url: string;
+  hd_url?: string;
+  copyright?: string;
+}
+
+export interface EPICData {
+  date: string;
+  caption: string;
+  image_url: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface EPICDisplay {
+  date: string;
+  lat: number;
+  lon: number;
+  imgUrl: string;
+}
+
+export interface AsteroidData {
+  id: string;
+  name: string;
+  is_hazardous: boolean;
+  metrics: {
+    diameter_meters: number;
+    velocity_km_h: number;
+    miss_distance_km: number;
+  };
+  mining_economy: {
+    estimated_value_usd: number;
+    primary_materials: string[];
+    mining_difficulty: string;
+    spectral_class?: string;
+  };
+  ai_summary: {
+    en: string;
+    ru: string;
+  } | string;
+  close_approach_date?: string;
+}

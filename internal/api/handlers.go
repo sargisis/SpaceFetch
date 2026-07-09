@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"regexp"
@@ -15,22 +14,19 @@ import (
 	"github.com/sargisis/spacefetch/internal/cache"
 	"github.com/sargisis/spacefetch/internal/database"
 	"github.com/sargisis/spacefetch/internal/models"
-	"github.com/sargisis/spacefetch/internal/nasa"
 )
 
 // Basic email format regex
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 
 type Handler struct {
-	db      *database.MongoDB
-	cache   *cache.RedisCache
-	nasaCli *nasa.Client
-	// secureCookies marks session cookies Secure (HTTPS-only) — enable in production
+	db            *database.MongoDB
+	cache         *cache.RedisCache
 	secureCookies bool
 }
 
-func NewHandler(db *database.MongoDB, cache *cache.RedisCache, nasaCli *nasa.Client, secureCookies bool) *Handler {
-	return &Handler{db: db, cache: cache, nasaCli: nasaCli, secureCookies: secureCookies}
+func NewHandler(db *database.MongoDB, cache *cache.RedisCache, secureCookies bool) *Handler {
+	return &Handler{db: db, cache: cache, secureCookies: secureCookies}
 }
 
 func (h *Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
@@ -103,52 +99,6 @@ func (h *Handler) GetTodayAsteroids(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-// GetAPOD serves NASA's Astronomy Picture of the Day, cached for an hour.
-func (h *Handler) GetAPOD(w http.ResponseWriter, r *http.Request) {
-	h.serveCachedFeed(w, r, "apod:today", func() (interface{}, error) {
-		return h.nasaCli.FetchAPOD()
-	})
-}
-
-// GetEPIC serves the latest DSCOVR EPIC Earth photo, cached for an hour.
-func (h *Handler) GetEPIC(w http.ResponseWriter, r *http.Request) {
-	h.serveCachedFeed(w, r, "epic:latest", func() (interface{}, error) {
-		return h.nasaCli.FetchEPICLatest()
-	})
-}
-
-// serveCachedFeed returns a cached upstream payload or fetches, caches, and returns it.
-func (h *Handler) serveCachedFeed(w http.ResponseWriter, r *http.Request, cacheKey string, fetch func() (interface{}, error)) {
-	start := time.Now()
-
-	payload, cached, err := h.cache.GetRaw(r.Context(), cacheKey)
-	if err != nil {
-		log.Printf("%s: redis cache error: %v", cacheKey, err)
-		cached = false
-	}
-
-	if !cached {
-		data, err := fetch()
-		if err != nil {
-			log.Printf("%s: upstream fetch error: %v", cacheKey, err)
-			writeError(w, http.StatusBadGateway, "upstream NASA feed unavailable")
-			return
-		}
-		payload, err = json.Marshal(data)
-		if err != nil {
-			writeError(w, http.StatusInternalServerError, "internal server error")
-			return
-		}
-		if err := h.cache.SetRaw(r.Context(), cacheKey, payload, time.Hour); err != nil {
-			log.Printf("%s: failed to cache: %v", cacheKey, err)
-		}
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprintf(w, `{"status":"success","meta":{"cached":%t,"response_time_ms":%d},"data":%s}`,
-		cached, time.Since(start).Milliseconds(), payload)
-}
-
 func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -217,6 +167,7 @@ func generateSecureAPIKey() (string, error) {
 	return "sf_live_" + hex.EncodeToString(bytes), nil
 }
 
+// Hash the API key using SHA-256 for secure storage in the database. The original key is returned to the user, while the hashed version is stored.
 func hashAPIKey(key string) string {
 	hash := sha256.Sum256([]byte(key))
 	return hex.EncodeToString(hash[:])

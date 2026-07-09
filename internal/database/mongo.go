@@ -146,6 +146,16 @@ func (m *MongoDB) GetTodayAsteroids(ctx context.Context) ([]models.Asteroid, err
 	return asteroids, nil
 }
 
+func (m *MongoDB) CleanupTest(ctx context.Context) error {
+	if err := m.asteroids.Drop(ctx); err != nil {
+		return err
+	}
+	if err := m.users.Drop(ctx); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *MongoDB) Ping(ctx context.Context) error {
 	return m.client.Ping(ctx, nil)
 }

@@ -1,6 +1,6 @@
 module github.com/sargisis/spacefetch
 
-go 1.26.4
+go 1.22.0
 
 require (
 	github.com/redis/go-redis/v9 v9.21.0

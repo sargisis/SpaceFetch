@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -14,7 +15,6 @@ import (
 	"github.com/sargisis/spacefetch/internal/cache"
 	"github.com/sargisis/spacefetch/internal/database"
 	"github.com/sargisis/spacefetch/internal/models"
-	"github.com/sargisis/spacefetch/internal/nasa"
 )
 
 // TestAuthenticationFlow is an integration test that verifies the full authentication flow, including user registration, API key validation, and rate limiting. It requires a local MongoDB and Redis instance to be running.
@@ -34,12 +34,12 @@ func TestAuthenticationFlow(t *testing.T) {
 	}
 	defer rcache.Close()
 
-	// Clean up previous test database collections & keys
-	_ = db.Close() // close connection before dropping, or just clean collections
+	// Clean up previous test database collections
+	db.CleanupTest(context.Background())
 	db, _ = database.NewMongoDB("mongodb://localhost:27017", "spacefetch_test")
 
 	// Set up router
-	router := NewRouter(db, rcache, nasa.NewClient("DEMO_KEY"), "", false)
+	router := NewRouter(db, rcache, "", false, nil)
 
 	// Step 1: Register a new user (unique email per run — the test DB persists)
 	regReq := models.UserRegisterRequest{
@@ -153,7 +153,7 @@ func TestSessionAuthFlow(t *testing.T) {
 	}
 	defer rcache.Close()
 
-	router := NewRouter(db, rcache, nasa.NewClient("DEMO_KEY"), "", false)
+	router := NewRouter(db, rcache, "", false, nil)
 
 	email := fmt.Sprintf("console%d@spacefetch.com", time.Now().UnixNano())
 	password := "supersecret123"
