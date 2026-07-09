@@ -1,4 +1,4 @@
-.PHONY: build-api build-worker run-api run-worker dev tidy
+.PHONY: build-api build-worker build-cli run-api run-worker dev tidy
 
 build-api:
 	go build -o bin/api ./cmd/api
@@ -6,7 +6,10 @@ build-api:
 build-worker:
 	go build -o bin/worker ./cmd/worker
 
-build: build-api build-worker
+build-cli:
+	go build -o bin/spacefetch ./cmd/spacefetch
+
+build: build-api build-worker build-cli
 
 run-api:
 	go run ./cmd/api
