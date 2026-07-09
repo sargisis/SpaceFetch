@@ -138,6 +138,11 @@ func (h *Handler) AuthRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if oldCookie, err := r.Cookie(sessionCookieName); err == nil && oldCookie.Value != "" {
+		h.cache.DeleteSession(r.Context(), oldCookie.Value)
+		h.setSessionCookie(w, "", -1)
+	}
+
 	if err := h.startSession(w, r, user.Email); err != nil {
 		log.Printf("auth: failed to start session after register: %v", err)
 	}
@@ -173,6 +178,12 @@ func (h *Handler) AuthLogin(w http.ResponseWriter, r *http.Request) {
 		bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)) != nil {
 		writeError(w, http.StatusUnauthorized, "invalid email or password")
 		return
+	}
+
+	// Regenerate session on login to prevent session fixation
+	if oldCookie, err := r.Cookie(sessionCookieName); err == nil && oldCookie.Value != "" {
+		h.cache.DeleteSession(r.Context(), oldCookie.Value)
+		h.setSessionCookie(w, "", -1)
 	}
 
 	if err := h.startSession(w, r, user.Email); err != nil {
