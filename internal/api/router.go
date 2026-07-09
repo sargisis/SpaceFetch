@@ -3,8 +3,10 @@ package api
 import (
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/sargisis/spacefetch/internal/cache"
@@ -55,12 +57,30 @@ func NewRouter(db *database.MongoDB, rcache *cache.RedisCache, nasaCli *nasa.Cli
 	mux.HandleFunc("GET /health", h.HealthCheck)
 	mux.Handle("POST /v1/users", registerLimit(http.HandlerFunc(h.RegisterUser)))
 
+	// Allowed origins for CORS and CSRF
+	allowed := map[string]bool{
+		"http://localhost:5173": true,
+		"http://127.0.0.1:5173": true,
+		"http://localhost:8080": true,
+		"http://127.0.0.1:8080": true,
+	}
+	var domainSuffixes []string
+	for _, o := range strings.Split(os.Getenv("ALLOWED_ORIGIN"), ",") {
+		if o = strings.TrimSpace(o); o != "" {
+			allowed[o] = true
+			if u, err := url.Parse(o); err == nil && u.Host != "" {
+				domainSuffixes = append(domainSuffixes, "."+u.Host)
+			}
+		}
+	}
+	csrf := CSRFMiddleware(allowed, domainSuffixes)
+
 	// Cookie-session auth for the web console
-	mux.Handle("POST /v1/auth/register", registerLimit(http.HandlerFunc(h.AuthRegister)))
-	mux.Handle("POST /v1/auth/login", loginLimit(http.HandlerFunc(h.AuthLogin)))
-	mux.HandleFunc("POST /v1/auth/logout", h.AuthLogout)
+	mux.Handle("POST /v1/auth/register", csrf(registerLimit(http.HandlerFunc(h.AuthRegister))))
+	mux.Handle("POST /v1/auth/login", csrf(loginLimit(http.HandlerFunc(h.AuthLogin))))
+	mux.Handle("POST /v1/auth/logout", csrf(http.HandlerFunc(h.AuthLogout)))
 	mux.HandleFunc("GET /v1/auth/me", h.AuthMe)
-	mux.HandleFunc("POST /v1/auth/regenerate-key", h.AuthRegenerateKey)
+	mux.Handle("POST /v1/auth/regenerate-key", csrf(http.HandlerFunc(h.AuthRegenerateKey)))
 
 	// 2. Protected Mux
 	protectedMux := http.NewServeMux()

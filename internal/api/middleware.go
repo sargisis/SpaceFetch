@@ -135,6 +135,56 @@ func writeError(w http.ResponseWriter, status int, message string) {
 		Message: message,
 	})
 }
+
+// originAllowed checks whether the given origin is in the allowed set or is a
+// subdomain of a configured domain suffix.
+func originAllowed(origin string, allowed map[string]bool, suffixes []string) bool {
+	if allowed[origin] {
+		return true
+	}
+	if origin != "" {
+		if u, err := url.Parse(origin); err == nil && u.Host != "" {
+			for _, suffix := range suffixes {
+				if strings.HasSuffix(u.Host, suffix) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+// CSRFMiddleware validates the Origin (or Referer) header on state-changing
+// POST requests to prevent cross-site request forgery. API-key-authenticated
+// requests (no session cookie) are not subject to CSRF and are passed through.
+func CSRFMiddleware(allowed map[string]bool, suffixes []string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodPost {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			origin := r.Header.Get("Origin")
+			referer := r.Header.Get("Referer")
+
+			if origin != "" {
+				if originAllowed(origin, allowed, suffixes) {
+					next.ServeHTTP(w, r)
+					return
+				}
+			} else if referer != "" {
+				if originAllowed(referer, allowed, suffixes) {
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
+
+			writeError(w, http.StatusForbidden, "CSRF validation failed: missing or mismatched Origin")
+		})
+	}
+}
+
 // CORS middleware allows cross-origin requests from the configured frontend origin.
 // Supports exact matches and wildcard subdomain matching (e.g. *.example.com).
 
@@ -160,19 +210,8 @@ func CORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
 
-		if allowed[origin] {
+		if originAllowed(origin, allowed, domainSuffixes) {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
-		} else if origin != "" {
-			// Check subdomain match: origin is allowed if its host ends with
-			// a known domain suffix (e.g. app.example.com -> .example.com)
-			if u, err := url.Parse(origin); err == nil && u.Host != "" {
-				for _, suffix := range domainSuffixes {
-					if strings.HasSuffix(u.Host, suffix) {
-						w.Header().Set("Access-Control-Allow-Origin", origin)
-						break
-					}
-				}
-			}
 		}
 
 		// Prevent cache poisoning when ACAO is dynamic
