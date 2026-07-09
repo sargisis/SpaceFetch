@@ -108,13 +108,8 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
         setErrorMsg(t('auth.errorInvalidKey'));
       }
     } catch (err) {
-      // Local fallback login
-      onLoginSuccess({
-        email: email || 'local.dev@spacefetch.dev',
-        apiKey: apiKeyInput,
-        tier: 'free',
-      });
-      onClose();
+      // Backend unreachable — never accept an unverified key
+      setErrorMsg(t('auth.errorGeneric'));
     } finally {
       setLoading(false);
     }

@@ -44,7 +44,7 @@ interface ConsolePageProps {
 }
 
 type Tab = 'space' | 'threat' | 'credentials' | 'logs' | 'docs';
-type SnippetTab = 'curl' | 'js' | 'python' | 'go' | 'rust' | 'cpp';
+type SnippetTab = 'curl' | 'powershell' | 'js' | 'python' | 'go' | 'rust' | 'cpp';
 
 export default function ConsolePage({ user, onGoHome }: ConsolePageProps) {
   const { t, language } = useLanguage();
@@ -74,29 +74,26 @@ export default function ConsolePage({ user, onGoHome }: ConsolePageProps) {
     if (activeTab !== 'space' && activeTab !== 'threat') return;
 
     setLoadingSpace(true);
-    // 1. Fetch APOD (NASA Daily Image)
-    fetch('https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY')
+    const authHeaders = { 'X-API-Key': user.apiKey };
+
+    // 1. Fetch APOD (NASA Daily Image) through the SpaceFetch API
+    fetch(getApiUrl('/v1/apod'), { headers: authHeaders })
       .then((res) => res.json())
-      .then((data) => setApod(data))
+      .then((resData) => {
+        if (resData.status === 'success' && resData.data) setApod(resData.data);
+      })
       .catch((err) => console.error('Failed to fetch APOD', err));
 
-    // 2. Fetch EPIC (Earth Satellite Photos)
-    fetch('https://epic.gsfc.nasa.gov/api/natural')
+    // 2. Fetch EPIC (Earth Satellite Photo) through the SpaceFetch API
+    fetch(getApiUrl('/v1/epic'), { headers: authHeaders })
       .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          const latest = data[0];
-          // Format date to folder structure (e.g. 2026/06/24)
-          const dateObj = new Date(latest.date);
-          const y = dateObj.getFullYear();
-          const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-          const d = String(dateObj.getDate()).padStart(2, '0');
-          
+      .then((resData) => {
+        if (resData.status === 'success' && resData.data) {
           setEpic({
-            date: latest.date,
-            lat: latest.centroid_coordinates.lat,
-            lon: latest.centroid_coordinates.lon,
-            imgUrl: `https://epic.gsfc.nasa.gov/archive/natural/${y}/${m}/${d}/png/${latest.image}.png`
+            date: resData.data.date,
+            lat: resData.data.latitude,
+            lon: resData.data.longitude,
+            imgUrl: resData.data.image_url,
           });
         }
       })
@@ -167,12 +164,23 @@ export default function ConsolePage({ user, onGoHome }: ConsolePageProps) {
   };
 
   const getSnippet = () => {
+    // Real, working base URL of this deployment (not a placeholder domain)
+    const base = window.location.origin;
+    const endpoint = `${base}/v1/asteroids/today`;
     switch (activeSnippetTab) {
       case 'curl':
         return `curl -i -H "X-API-Key: ${user.apiKey}" \\
-  https://api.spacefetch.dev/v1/asteroids/today`;
+  ${endpoint}`;
+      case 'powershell':
+        return `# PowerShell (curl.exe, not the curl alias!)
+curl.exe -s ${endpoint} \`
+  -H "X-API-Key: ${user.apiKey}" -o asteroids.json
+
+# or native:
+Invoke-RestMethod -Uri "${endpoint}" \`
+  -Headers @{"X-API-Key"="${user.apiKey}"}`;
       case 'js':
-        return `fetch("https://api.spacefetch.dev/v1/asteroids/today", {
+        return `fetch("${endpoint}", {
   headers: { "X-API-Key": "${user.apiKey}" }
 })
   .then(res => res.json())
@@ -180,7 +188,7 @@ export default function ConsolePage({ user, onGoHome }: ConsolePageProps) {
       case 'python':
         return `import requests
 
-url = "https://api.spacefetch.dev/v1/asteroids/today"
+url = "${endpoint}"
 headers = {"X-API-Key": "${user.apiKey}"}
 
 response = requests.get(url, headers=headers)
@@ -196,9 +204,9 @@ import (
 
 func main() {
 	client := &http.Client{}
-	req, _ := http.NewRequest("GET", "https://api.spacefetch.dev/v1/asteroids/today", nil)
+	req, _ := http.NewRequest("GET", "${endpoint}", nil)
 	req.Header.Set("X-API-Key", "${user.apiKey}")
-	
+
 	resp, _ := client.Do(req)
 	defer resp.Body.Close()
 	body, _ := io.ReadAll(resp.Body)
@@ -212,7 +220,7 @@ func main() {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
     let res = client
-        .get("https://api.spacefetch.dev/v1/asteroids/today")
+        .get("${endpoint}")
         .header("X-API-Key", "${user.apiKey}")
         .send()
         .await?
@@ -228,11 +236,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 int main() {
     CURL* curl = curl_easy_init();
     if(curl) {
-        curl_easy_setopt(curl, CURLOPT_URL, "https://api.spacefetch.dev/v1/asteroids/today");
+        curl_easy_setopt(curl, CURLOPT_URL, "${endpoint}");
         struct curl_slist* headers = NULL;
         headers = curl_slist_append(headers, "X-API-Key: ${user.apiKey}");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-        
+
         CURLcode res = curl_easy_perform(curl);
         curl_easy_cleanup(curl);
     }
@@ -575,8 +583,8 @@ int main() {
                 
                 {/* Tabs */}
                 <div className="flex gap-1 bg-black/40 border border-white/5 p-0.5 rounded-lg overflow-x-auto max-w-[200px] sm:max-w-none scrollbar-none">
-                  {(['curl', 'js', 'python', 'go', 'rust', 'cpp'] as SnippetTab[]).map((t) => {
-                    const label = t === 'cpp' ? 'C++' : t === 'js' ? 'JS' : t.toUpperCase();
+                  {(['curl', 'powershell', 'js', 'python', 'go', 'rust', 'cpp'] as SnippetTab[]).map((t) => {
+                    const label = t === 'cpp' ? 'C++' : t === 'js' ? 'JS' : t === 'powershell' ? 'PS' : t.toUpperCase();
                     return (
                       <button
                         key={t}
