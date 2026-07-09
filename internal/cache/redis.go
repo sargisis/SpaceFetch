@@ -84,36 +84,21 @@ func (r *RedisCache) GetUserCache(ctx context.Context, hashedKey string) (*model
 	return &user, true, nil
 }
 
-// Sessions (web console cookie auth)
-//
-// A session maps an opaque random ID (stored in an httpOnly cookie) to the
-// user's email. User data itself is always resolved through Mongo / the
-// short-lived user cache, so tier changes and key rotations take effect
-// without re-login.
+// GetRaw / SetRaw cache arbitrary JSON payloads under a key (used for APOD/EPIC feeds).
 
-func (r *RedisCache) CreateSession(ctx context.Context, sessionID, email string, ttl time.Duration) error {
-	return r.cli.Set(ctx, "session:"+sessionID, email, ttl).Err()
-}
-
-func (r *RedisCache) GetSession(ctx context.Context, sessionID string) (string, bool, error) {
-	email, err := r.cli.Get(ctx, "session:"+sessionID).Result()
+func (r *RedisCache) GetRaw(ctx context.Context, key string) ([]byte, bool, error) {
+	data, err := r.cli.Get(ctx, key).Bytes()
 	if err != nil {
 		if err == redis.Nil {
-			return "", false, nil
+			return nil, false, nil
 		}
-		return "", false, err
+		return nil, false, err
 	}
-	return email, true, nil
+	return data, true, nil
 }
 
-func (r *RedisCache) DeleteSession(ctx context.Context, sessionID string) error {
-	return r.cli.Del(ctx, "session:"+sessionID).Err()
-}
-
-// DeleteUserCache drops the cached user for a hashed API key, so a revoked
-// key stops working immediately instead of after the cache TTL.
-func (r *RedisCache) DeleteUserCache(ctx context.Context, hashedKey string) error {
-	return r.cli.Del(ctx, fmt.Sprintf("user:%s", hashedKey)).Err()
+func (r *RedisCache) SetRaw(ctx context.Context, key string, data []byte, ttl time.Duration) error {
+	return r.cli.Set(ctx, key, data, ttl).Err()
 }
 
 func (r *RedisCache) Ping(ctx context.Context) error {

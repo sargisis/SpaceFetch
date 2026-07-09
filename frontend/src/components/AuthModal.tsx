@@ -102,15 +102,9 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
         setErrorMsg(res.status === 401 ? t('auth.errorInvalidCredentials') : data.message || t('auth.errorGeneric'));
         return;
       }
-
-      onLoginSuccess({
-        email: data.email,
-        tier: data.tier,
-      });
-      onClose();
     } catch (err) {
-      console.error(err);
-      setErrorMsg(t('auth.errorNetwork'));
+      // Backend unreachable — never accept an unverified key
+      setErrorMsg(t('auth.errorGeneric'));
     } finally {
       setLoading(false);
     }

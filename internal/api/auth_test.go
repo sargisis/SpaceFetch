@@ -14,6 +14,7 @@ import (
 	"github.com/sargisis/spacefetch/internal/cache"
 	"github.com/sargisis/spacefetch/internal/database"
 	"github.com/sargisis/spacefetch/internal/models"
+	"github.com/sargisis/spacefetch/internal/nasa"
 )
 
 // TestAuthenticationFlow is an integration test that verifies the full authentication flow, including user registration, API key validation, and rate limiting. It requires a local MongoDB and Redis instance to be running.
@@ -37,10 +38,8 @@ func TestAuthenticationFlow(t *testing.T) {
 	_ = db.Close() // close connection before dropping, or just clean collections
 	db, _ = database.NewMongoDB("mongodb://localhost:27017", "spacefetch_test")
 
-	// Set up router. secureCookies=false: httptest requests are plain HTTP
-	// (matching the dev default), and httptest doesn't enforce the Secure
-	// attribute anyway, so `true` would also pass — but false is accurate.
-	router := NewRouter(db, rcache, "", false)
+	// Set up router
+	router := NewRouter(db, rcache, nasa.NewClient("DEMO_KEY"), "")
 
 	// Step 1: Register a new user (unique email per run — the test DB persists)
 	regReq := models.UserRegisterRequest{

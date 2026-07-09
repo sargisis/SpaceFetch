@@ -8,7 +8,6 @@ import CTA from './components/CTA';
 import Footer from './components/Footer';
 import { LanguageProvider } from './i18n/LanguageContext';
 import { getApiUrl } from './config';
-import type { SessionUser } from './types';
 
 // Lazy load 3D heavy components for optimized load time
 const StarField = lazy(() => import('./components/StarField'));
@@ -22,19 +21,41 @@ export default function App() {
   const [authTab, setAuthTab] = useState<'login' | 'register'>('login');
 
   useEffect(() => {
-    // Drop credentials persisted by the old localStorage-based auth —
-    // they were readable by any XSS payload
-    localStorage.removeItem('sf_user');
+    const savedUser = localStorage.getItem('sf_user');
+    if (!savedUser) return;
 
-    // Restore the console session from the httpOnly cookie
-    fetch(getApiUrl('/v1/auth/me'), { credentials: 'include' })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data) setUser({ email: data.email, tier: data.tier });
+    let parsed: { email: string; apiKey: string; tier: string } | null = null;
+    try {
+      parsed = JSON.parse(savedUser);
+    } catch (e) {
+      console.error('Failed to parse saved user from local storage', e);
+      localStorage.removeItem('sf_user');
+      return;
+    }
+
+    // Mock keys were generated client-side in offline mode — the backend
+    // doesn't know them, so drop the session and ask to register again
+    if (!parsed?.apiKey || parsed.apiKey.includes('mock')) {
+      localStorage.removeItem('sf_user');
+      setAuthTab('register');
+      setIsAuthOpen(true);
+      return;
+    }
+
+    setUser(parsed);
+
+    // Validate the saved key against the backend; log out if it's invalid.
+    // Network errors keep the session (backend may just be offline).
+    fetch(getApiUrl('/v1/asteroids/today'), { headers: { 'X-API-Key': parsed.apiKey } })
+      .then((res) => {
+        if (res.status === 401) {
+          setUser(null);
+          localStorage.removeItem('sf_user');
+          setAuthTab('register');
+          setIsAuthOpen(true);
+        }
       })
-      .catch(() => {
-        // Backend unreachable — stay logged out
-      });
+      .catch(() => {});
   }, []);
 
   const handleLoginSuccess = (userData: SessionUser) => {
