@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { getApiUrl } from '../config';
-import type { SessionUser, APODData, EPICData, EPICDisplay } from '../types';
+import type { SessionUser, APODData, EPICDisplay } from '../types';
 const ThreatDashboard = lazy(() => import('./ThreatDashboard'));
 
 interface AsteroidData {
