@@ -65,6 +65,9 @@ export default function ConsolePage({ user, onGoHome, onApiKeyChange }: ConsoleP
   const [activeSnippetTab, setActiveSnippetTab] = useState<SnippetTab>('curl');
   const [copiedSnippet, setCopiedSnippet] = useState(false);
 
+  // Image load error states
+  const [epicImgError, setEpicImgError] = useState(false);
+
   // Live log logs
   const [logs, setLogs] = useState<string[]>([]);
   const logTerminalRef = useRef<HTMLDivElement>(null);
@@ -98,6 +101,7 @@ export default function ConsolePage({ user, onGoHome, onApiKeyChange }: ConsoleP
             lon: resData.data.longitude,
             imgUrl: resData.data.image_url,
           });
+          setEpicImgError(false);
         }
       })
       .catch((err) => console.error('Failed to fetch EPIC', err));
@@ -419,13 +423,18 @@ int main() {
                         <Camera className="h-4 w-4 text-accent animate-pulse" />
                         <span className="text-[10px] text-accent font-semibold tracking-wider font-mono uppercase">{t('console.epicTitle')}</span>
                       </div>
-                      {epic?.imgUrl ? (
+                      {epic?.imgUrl && !epicImgError ? (
                         <div className="rounded-xl overflow-hidden max-h-[220px] border border-white/10 mb-4 bg-black flex items-center justify-center p-2">
-                          <img src={epic.imgUrl} alt="Live Earth View" className="w-[190px] h-[190px] object-cover animate-[spin_180s_linear_infinite]" />
+                          <img
+                            src={epic.imgUrl}
+                            alt="Live Earth View"
+                            className="w-[190px] h-[190px] object-cover animate-[spin_180s_linear_infinite]"
+                            onError={() => setEpicImgError(true)}
+                          />
                         </div>
                       ) : (
                         <div className="h-[180px] rounded-xl border border-dashed border-white/10 flex items-center justify-center text-slate-500 text-xs font-mono mb-4">
-                          Syncing Earth Feed...
+                          {epicImgError ? 'Earth imagery temporarily unavailable' : 'Syncing Earth Feed...'}
                         </div>
                       )}
                       <h4 className="text-sm font-bold text-white leading-snug">Full-Disk Color Earth Photograph</h4>
