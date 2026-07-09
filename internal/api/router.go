@@ -8,6 +8,7 @@ import (
 
 	"github.com/sargisis/spacefetch/internal/cache"
 	"github.com/sargisis/spacefetch/internal/database"
+	"github.com/sargisis/spacefetch/internal/nasa"
 )
 
 type spaHandler struct {
@@ -39,8 +40,8 @@ func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.FileServer(http.Dir(h.staticPath)).ServeHTTP(w, r)
 }
 
-func NewRouter(db *database.MongoDB, rcache *cache.RedisCache, frontendDir string) http.Handler {
-	h := NewHandler(db, rcache)
+func NewRouter(db *database.MongoDB, rcache *cache.RedisCache, nasaCli *nasa.Client, frontendDir string) http.Handler {
+	h := NewHandler(db, rcache, nasaCli)
 
 	mux := http.NewServeMux()
 
@@ -51,6 +52,8 @@ func NewRouter(db *database.MongoDB, rcache *cache.RedisCache, frontendDir strin
 	// 2. Protected Mux
 	protectedMux := http.NewServeMux()
 	protectedMux.HandleFunc("GET /v1/asteroids/today", h.GetTodayAsteroids)
+	protectedMux.HandleFunc("GET /v1/apod", h.GetAPOD)
+	protectedMux.HandleFunc("GET /v1/epic", h.GetEPIC)
 
 	// Wrap protected endpoints with Auth and RateLimit middlewares
 	var protectedHandler http.Handler = protectedMux
@@ -59,6 +62,8 @@ func NewRouter(db *database.MongoDB, rcache *cache.RedisCache, frontendDir strin
 
 	// Mount protected handler
 	mux.Handle("/v1/asteroids/", protectedHandler)
+	mux.Handle("/v1/apod", protectedHandler)
+	mux.Handle("/v1/epic", protectedHandler)
 
 	// 3. Serve Frontend static files if the directory exists
 	if frontendDir != "" {

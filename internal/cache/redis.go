@@ -84,6 +84,23 @@ func (r *RedisCache) GetUserCache(ctx context.Context, hashedKey string) (*model
 	return &user, true, nil
 }
 
+// GetRaw / SetRaw cache arbitrary JSON payloads under a key (used for APOD/EPIC feeds).
+
+func (r *RedisCache) GetRaw(ctx context.Context, key string) ([]byte, bool, error) {
+	data, err := r.cli.Get(ctx, key).Bytes()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, false, nil
+		}
+		return nil, false, err
+	}
+	return data, true, nil
+}
+
+func (r *RedisCache) SetRaw(ctx context.Context, key string, data []byte, ttl time.Duration) error {
+	return r.cli.Set(ctx, key, data, ttl).Err()
+}
+
 func (r *RedisCache) Ping(ctx context.Context) error {
 	return r.cli.Ping(ctx).Err()
 }

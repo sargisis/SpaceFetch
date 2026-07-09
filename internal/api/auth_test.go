@@ -12,6 +12,7 @@ import (
 	"github.com/sargisis/spacefetch/internal/cache"
 	"github.com/sargisis/spacefetch/internal/database"
 	"github.com/sargisis/spacefetch/internal/models"
+	"github.com/sargisis/spacefetch/internal/nasa"
 )
 
 func TestAuthenticationFlow(t *testing.T) {
@@ -35,7 +36,7 @@ func TestAuthenticationFlow(t *testing.T) {
 	db, _ = database.NewMongoDB("mongodb://localhost:27017", "spacefetch_test")
 
 	// Set up router
-	router := NewRouter(db, rcache, "")
+	router := NewRouter(db, rcache, nasa.NewClient("DEMO_KEY"), "")
 
 	// Step 1: Register a new user
 	regReq := models.UserRegisterRequest{

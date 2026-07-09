@@ -67,6 +67,28 @@ type MiningEconomy struct {
 	MiningDifficulty  string   `json:"mining_difficulty" bson:"mining_difficulty"`
 }
 
+// APOD — NASA Astronomy Picture of the Day (normalized)
+
+type APOD struct {
+	Date        string `json:"date"`
+	Title       string `json:"title"`
+	Explanation string `json:"explanation"`
+	MediaType   string `json:"media_type"`
+	URL         string `json:"url"`
+	HDURL       string `json:"hd_url,omitempty"`
+	Copyright   string `json:"copyright,omitempty"`
+}
+
+// EPICImage — DSCOVR EPIC Earth photo (normalized)
+
+type EPICImage struct {
+	Date      string  `json:"date"`
+	Caption   string  `json:"caption"`
+	ImageURL  string  `json:"image_url"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
+
 // API response
 
 type APIResponse struct {

@@ -13,6 +13,7 @@ import (
 	"github.com/sargisis/spacefetch/internal/cache"
 	"github.com/sargisis/spacefetch/internal/config"
 	"github.com/sargisis/spacefetch/internal/database"
+	"github.com/sargisis/spacefetch/internal/nasa"
 )
 
 func main() {
@@ -30,7 +31,9 @@ func main() {
 	}
 	defer rcache.Close()
 
-	router := api.NewRouter(mdb, rcache, cfg.FrontendDir)
+	nasaCli := nasa.NewClient(cfg.NASAAPIKey)
+
+	router := api.NewRouter(mdb, rcache, nasaCli, cfg.FrontendDir)
 
 	server := &http.Server{
 		Addr:    ":" + cfg.APIPort,
