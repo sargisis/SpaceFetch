@@ -41,8 +41,8 @@ func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.FileServer(http.Dir(h.staticPath)).ServeHTTP(w, r)
 }
 
-func NewRouter(db *database.MongoDB, rcache *cache.RedisCache, nasaCli *nasa.Client, frontendDir string) http.Handler {
-	h := NewHandler(db, rcache, nasaCli)
+func NewRouter(db *database.MongoDB, rcache *cache.RedisCache, nasaCli *nasa.Client, frontendDir string, secureCookies bool) http.Handler {
+	h := NewHandler(db, rcache, nasaCli, secureCookies)
 
 	mux := http.NewServeMux()
 

@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -44,16 +45,19 @@ func (w *Worker) Start(ctx context.Context) {
 
 	log.Printf("worker started, interval: %s", w.interval)
 
-	// Run immediately on start
-	w.sync(ctx)
-
-	ticker := time.NewTicker(w.interval)
-	defer ticker.Stop()
+	// A failed sync (NASA rate limit, network blip) retries much sooner than
+	// the regular interval so the data doesn't stay stale for hours.
+	const retryDelay = 10 * time.Minute
 
 	for {
+		delay := w.interval
+		if err := w.sync(ctx); err != nil {
+			log.Printf("worker: sync failed, retrying in %s: %v", retryDelay, err)
+			delay = retryDelay
+		}
+
 		select {
-		case <-ticker.C:
-			w.sync(ctx)
+		case <-time.After(delay):
 		case <-ctx.Done():
 			log.Println("worker stopped")
 			return
@@ -61,13 +65,12 @@ func (w *Worker) Start(ctx context.Context) {
 	}
 }
 
-func (w *Worker) sync(ctx context.Context) {
+func (w *Worker) sync(ctx context.Context) error {
 	log.Println("worker: fetching asteroids from NASA...")
 
 	neos, err := w.nasaCli.FetchToday()
 	if err != nil {
-		log.Printf("worker: NASA fetch error: %v", err)
-		return
+		return fmt.Errorf("NASA fetch: %w", err)
 	}
 
 	asteroids := make([]models.Asteroid, len(neos))
@@ -87,8 +90,7 @@ func (w *Worker) sync(ctx context.Context) {
 
 	log.Printf("worker: saving %d asteroids to MongoDB...", len(asteroids))
 	if err := w.db.UpsertAsteroids(ctx, asteroids); err != nil {
-		log.Printf("worker: mongo upsert error: %v", err)
-		return
+		return fmt.Errorf("mongo upsert: %w", err)
 	}
 
 	// Warm the cache
@@ -97,4 +99,5 @@ func (w *Worker) sync(ctx context.Context) {
 	}
 
 	log.Printf("worker: sync complete — %d asteroids", len(asteroids))
+	return nil
 }

@@ -27,6 +27,7 @@ interface AsteroidData {
     estimated_value_usd: number;
     primary_materials: string[];
     mining_difficulty: string;
+    spectral_class?: string;
   };
   ai_summary: {
     en: string;
@@ -449,6 +450,17 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
                             ${formatNumber(ast.mining_economy.estimated_value_usd)}
                           </span>
                         </div>
+                        {ast.mining_economy.spectral_class && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-slate-400">{t('threat.spectralClass')}</span>
+                            <span className="text-xs font-mono font-bold text-cyan-300">
+                              {ast.mining_economy.spectral_class}
+                              <span className="text-slate-500 font-normal ml-1">
+                                {ast.mining_economy.spectral_class === 'M' ? '(metallic)' : ast.mining_economy.spectral_class === 'S' ? '(stony)' : '(carbonaceous)'}
+                              </span>
+                            </span>
+                          </div>
+                        )}
                         <div className="flex justify-between items-center">
                           <span className="text-xs text-slate-400">{t('threat.difficulty')}</span>
                           <span className={`text-xs font-mono uppercase font-bold ${
@@ -469,6 +481,9 @@ export default function ThreatDashboard({ asteroids, loading }: ThreatDashboardP
                             ))}
                           </div>
                         </div>
+                        <p className="text-[9px] text-slate-500 font-body leading-relaxed pt-2 border-t border-white/5">
+                          {t('threat.miningDisclaimer')}
+                        </p>
                       </div>
                     </div>
 

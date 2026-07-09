@@ -77,10 +77,10 @@ export default function ConsolePage({ user, onGoHome, onApiKeyChange }: ConsoleP
     if (activeTab !== 'space' && activeTab !== 'threat') return;
 
     setLoadingSpace(true);
-    const authHeaders = { 'X-API-Key': user.apiKey };
 
-    // 1. Fetch APOD (NASA Daily Image) through the SpaceFetch API
-    fetch(getApiUrl('/v1/apod'), { headers: authHeaders })
+    // 1. Fetch APOD (NASA Daily Image) through the SpaceFetch API —
+    // authenticated by the httpOnly session cookie, same as asteroids below
+    fetch(getApiUrl('/v1/apod'), { credentials: 'include' })
       .then((res) => res.json())
       .then((resData) => {
         if (resData.status === 'success' && resData.data) setApod(resData.data);
@@ -88,7 +88,7 @@ export default function ConsolePage({ user, onGoHome, onApiKeyChange }: ConsoleP
       .catch((err) => console.error('Failed to fetch APOD', err));
 
     // 2. Fetch EPIC (Earth Satellite Photo) through the SpaceFetch API
-    fetch(getApiUrl('/v1/epic'), { headers: authHeaders })
+    fetch(getApiUrl('/v1/epic'), { credentials: 'include' })
       .then((res) => res.json())
       .then((resData) => {
         if (resData.status === 'success' && resData.data) {
@@ -195,19 +195,19 @@ export default function ConsolePage({ user, onGoHome, onApiKeyChange }: ConsoleP
     const endpoint = `${base}/v1/asteroids/today`;
     switch (activeSnippetTab) {
       case 'curl':
-        return `curl -i -H "X-API-Key: ${user.apiKey}" \\
+        return `curl -i -H "X-API-Key: ${displayKey}" \\
   ${endpoint}`;
       case 'powershell':
         return `# PowerShell (curl.exe, not the curl alias!)
 curl.exe -s ${endpoint} \`
-  -H "X-API-Key: ${user.apiKey}" -o asteroids.json
+  -H "X-API-Key: ${displayKey}" -o asteroids.json
 
 # or native:
 Invoke-RestMethod -Uri "${endpoint}" \`
-  -Headers @{"X-API-Key"="${user.apiKey}"}`;
+  -Headers @{"X-API-Key"="${displayKey}"}`;
       case 'js':
         return `fetch("${endpoint}", {
-  headers: { "X-API-Key": "${user.apiKey}" }
+  headers: { "X-API-Key": "${displayKey}" }
 })
   .then(res => res.json())
   .then(data => console.log(data));`;
@@ -215,7 +215,7 @@ Invoke-RestMethod -Uri "${endpoint}" \`
         return `import requests
 
 url = "${endpoint}"
-headers = {"X-API-Key": "${user.apiKey}"}
+headers = {"X-API-Key": "${displayKey}"}
 
 response = requests.get(url, headers=headers)
 print(response.json())`;
@@ -231,7 +231,7 @@ import (
 func main() {
 	client := &http.Client{}
 	req, _ := http.NewRequest("GET", "${endpoint}", nil)
-	req.Header.Set("X-API-Key", "${user.apiKey}")
+	req.Header.Set("X-API-Key", "${displayKey}")
 
 	resp, _ := client.Do(req)
 	defer resp.Body.Close()
@@ -247,7 +247,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
     let res = client
         .get("${endpoint}")
-        .header("X-API-Key", "${user.apiKey}")
+        .header("X-API-Key", "${displayKey}")
         .send()
         .await?
         .text()

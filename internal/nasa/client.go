@@ -3,6 +3,7 @@ package nasa
 import (
 	"encoding/json"
 	"fmt"
+	"hash/fnv"
 	"math"
 	"net/http"
 	"strconv"
@@ -174,29 +175,80 @@ func Enrich(neo models.NeoObject) models.Asteroid {
 	}
 }
 
+// calculateEconomy estimates an asteroid's resource value with a volumetric
+// model, the same approach popularized by Asterank / Planetary Resources:
+//
+//	value = volume × density(class) × recoverable value per ton(class)
+//
+// The spectral class (C/S/M) is not in the NeoWs feed, so it is assigned
+// deterministically from the asteroid's ID following the real population
+// distribution (~75% C, ~17% S, ~8% M). Densities are literature averages
+// (Britt et al.); per-ton values are order-of-magnitude estimates of
+// recoverable material worth. This is an educational estimate, not a market
+// valuation — the site and docs label it as such.
 func calculateEconomy(neo models.NeoObject) models.MiningEconomy {
 	diameter := (neo.EstimatedDiameter.Meters.Min + neo.EstimatedDiameter.Meters.Max) / 2.0
+	radius := diameter / 2.0
+	volumeM3 := 4.0 / 3.0 * math.Pi * radius * radius * radius
 
-	materials := []string{"nickel", "iron"}
+	class := spectralClass(neo.ID)
+
+	var densityTM3, valuePerTon float64
+	var materials []string
+	switch class {
+	case "M": // metallic — iron-nickel with platinum-group metals
+		densityTM3 = 5.32
+		valuePerTon = 2500
+		materials = []string{"iron", "nickel", "platinum", "cobalt", "gold"}
+	case "S": // silicaceous — stony with metal grains
+		densityTM3 = 2.71
+		valuePerTon = 500
+		materials = []string{"nickel", "iron", "cobalt", "magnesium silicates"}
+	default: // C — carbonaceous: water and volatiles, valuable as in-space propellant
+		densityTM3 = 1.38
+		valuePerTon = 200
+		materials = []string{"water", "organics", "iron", "nickel"}
+	}
+
+	massTons := volumeM3 * densityTM3
+	value := int64(massTons * valuePerTon)
+
+	// Difficulty combines target size (infrastructure needed) with approach
+	// velocity (rendezvous delta-v proxy).
+	var velocity float64
+	if len(neo.CloseApproachData) > 0 {
+		if v, err := strconv.ParseFloat(neo.CloseApproachData[0].RelativeVelocity.KmPerHour, 64); err == nil {
+			velocity = v
+		}
+	}
+	score := diameter/500.0 + velocity/50000.0
 	difficulty := "low"
-	var value int64
-
 	switch {
-	case diameter > 500:
-		materials = append(materials, "platinum", "cobalt")
+	case score > 1.6:
 		difficulty = "high"
-		value = int64(diameter * diameter * diameter * 1200)
-	case diameter > 100:
-		materials = append(materials, "gold")
+	case score > 0.8:
 		difficulty = "medium"
-		value = int64(diameter * diameter * diameter * 300)
-	default:
-		value = int64(diameter * diameter * diameter * 50)
 	}
 
 	return models.MiningEconomy{
 		EstimatedValueUSD: value,
 		PrimaryMaterials:  materials,
 		MiningDifficulty:  difficulty,
+		SpectralClass:     class,
+	}
+}
+
+// spectralClass deterministically assigns a composition class from the
+// asteroid ID, matching the observed near-Earth population distribution.
+func spectralClass(id string) string {
+	h := fnv.New32a()
+	h.Write([]byte(id))
+	switch n := h.Sum32() % 100; {
+	case n < 75:
+		return "C"
+	case n < 92:
+		return "S"
+	default:
+		return "M"
 	}
 }

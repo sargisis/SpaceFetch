@@ -8,6 +8,7 @@ import CTA from './components/CTA';
 import Footer from './components/Footer';
 import { LanguageProvider } from './i18n/LanguageContext';
 import { getApiUrl } from './config';
+import type { SessionUser } from './types';
 
 // Lazy load 3D heavy components for optimized load time
 const StarField = lazy(() => import('./components/StarField'));
