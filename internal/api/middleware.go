@@ -105,17 +105,24 @@ func writeError(w http.ResponseWriter, status int, message string) {
 }
 
 func CORS(next http.Handler) http.Handler {
-	// Load allowed origin from env, fall back to localhost for dev
-	allowedOrigin := os.Getenv("ALLOWED_ORIGIN")
-	if allowedOrigin == "" {
-		allowedOrigin = "http://localhost:5173"
+	// ALLOWED_ORIGIN is a comma-separated list; local dev origins are always allowed
+	allowed := map[string]bool{
+		"http://localhost:5173": true,
+		"http://127.0.0.1:5173": true,
+		"http://localhost:8080": true,
+		"http://127.0.0.1:8080": true,
+	}
+	for _, o := range strings.Split(os.Getenv("ALLOWED_ORIGIN"), ",") {
+		if o = strings.TrimSpace(o); o != "" {
+			allowed[o] = true
+		}
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
 
-		// Only allow requests from the configured frontend origin
-		if origin == allowedOrigin {
+		// Only allow requests from configured frontend origins
+		if allowed[origin] {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 		}
 

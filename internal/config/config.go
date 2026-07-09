@@ -21,7 +21,8 @@ type Config struct {
 
 func Load() *Config {
 	return &Config{
-		NASAAPIKey:     getEnv("NASA_API_KEY", "demo"),
+		// DEMO_KEY is NASA's official public demo key (30 req/hour, 50/day)
+		NASAAPIKey:     getEnv("NASA_API_KEY", "DEMO_KEY"),
 		GroqAPIKey:     getEnv("GROQ_API_KEY", ""),
 		MongoURI:       getEnv("MONGO_URI", "mongodb://localhost:27017"),
 		MongoDB:        getEnv("MONGO_DB", "spacefetch"),
