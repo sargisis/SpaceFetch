@@ -16,7 +16,7 @@
 
 <br/>
 
-> **SpaceFetch** is a high-performance web service that scrapes, cleans, and normalizes raw feeds from NASA APIs _(APOD, NeoWs, EPIC)_ — serving them through a unified, blazing-fast, cached API endpoint with AI-generated summaries powered by **Groq (Llama 3.3 70B)**.
+> **SpaceFetch** is a high-performance web service that scrapes, cleans, and normalizes raw feeds from NASA APIs _(NeoWs, APOD, EPIC)_ — serving them through a blazing-fast, cached API endpoint with AI-generated summaries powered by **Groq (Llama 3.3 70B)**.
 
 <br/>
 
@@ -127,7 +127,7 @@ SpaceFetch speaks your language. The entire interface is fully localized in **9 
   <tr>
     <td>🔭</td>
     <td><strong>NASA Data Pipeline</strong></td>
-    <td>Real-time ingestion from APOD, NeoWs, and EPIC APIs with automated background workers</td>
+    <td>Real-time ingestion from NeoWs with automated background workers and AI enrichment</td>
   </tr>
   <tr>
     <td>🤖</td>
@@ -238,6 +238,15 @@ REDIS_PASSWORD=
 API_PORT=8080
 WORKER_INTERVAL=6h
 CACHE_TTL=3600
+COOKIE_SECURE=false
+FRONTEND_DIR=./frontend/dist
+
+# ═══════════════════════════════════════════
+#  🌐 CORS & Allowed Origins
+# ═══════════════════════════════════════════
+# Localhost origins (5173, 8080) are always allowed.
+# Add your production URL(s), comma-separated:
+ALLOWED_ORIGIN=https://your-app.pages.dev
 ```
 
 <br/>
@@ -292,9 +301,11 @@ POST /v1/users
 **Request Body:**
 ```json
 {
-  "email": "developer@spacefetch.dev"
+  "email": "developer@spacefetch.dev",
+  "tier": "free"
 }
 ```
+> `tier` is optional, defaults to `"free"`. Valid values: `"free"`, `"premium"`.
 
 **Response** `201 Created`:
 ```json
@@ -369,18 +380,6 @@ GET /v1/asteroids/today
 
 <br/>
 
-### 3️⃣ Astronomy Picture of the Day _(Protected)_
-
-```
-GET /v1/apod
-```
-
-### 4️⃣ EPIC Earth Images _(Protected)_
-
-```
-GET /v1/epic/latest
-```
-
 <br/>
 
 ---
@@ -409,13 +408,31 @@ Client Request → Auth Check → Redis Cache
 
 ## 🔒 Rate Limits
 
-| Tier | Requests | Window | Features |
+| Tier | Requests | Window | Endpoints |
 |:---:|:---:|:---:|:---|
-| 🆓 **Free** | 5 | per second | APOD, NeoWs, EPIC |
-| ⭐ **Pro** | 50 | per second | + Priority Cache + Webhooks |
-| 🏢 **Enterprise** | ∞ | unlimited | + Custom Endpoints + SLA |
+| 🆓 **Free** | 5 | per second | Asteroids (NeoWs) |
 
 </div>
+
+<br/>
+
+---
+
+<br/>
+
+<div align="center">
+
+## 🔒 Security
+
+</div>
+
+- **CSP, HSTS, X-Frame-Options** — strict security headers on every response
+- **CSRF Protection** — Origin/Referer validation on all state-changing POST endpoints
+- **Session Fixation** — session ID is regenerated on every login
+- **Body Size Limit** — 1 MB `MaxBytesReader` on all request bodies
+- **httpOnly Cookies** — session cookie is never accessible from JavaScript
+- **SHA-256 API Keys** — keys are hashed at rest, returned exactly once
+- **IP Rate Limiting** — per-IP throttling on register (5/min) and login (10/min)
 
 <br/>
 
@@ -433,19 +450,20 @@ Client Request → Auth Check → Redis Cache
 SpaceFetch/
 ├── 🔧 cmd/
 │   ├── api/            # API server entrypoint
-│   └── worker/         # Background data worker
+│   └── worker/         # Background data worker (NASA ingestion + AI)
 ├── 📦 internal/
-│   ├── handlers/       # HTTP route handlers
-│   ├── middleware/      # Auth, rate limiting, CORS
-│   ├── models/         # MongoDB document models
-│   ├── services/       # Business logic layer
-│   └── cache/          # Redis caching layer
+│   ├── api/            # HTTP handlers, auth, middleware, router
+│   ├── config/         # Centralized env configuration
+│   ├── models/         # Shared data types & API contracts
+│   ├── database/       # MongoDB layer (CRUD, migrations)
+│   ├── cache/          # Redis caching layer
+│   ├── nasa/           # NASA HTTP client (NeoWs, APOD, EPIC)
+│   └── worker/         # Background job orchestration
 ├── 🌐 frontend/
 │   ├── src/
 │   │   ├── components/ # React UI components
 │   │   ├── i18n/       # 🌍 Translations & language context
-│   │   ├── pages/      # Route pages
-│   │   └── three/      # WebGL 3D scene
+│   │   └── config.ts   # API endpoint helper
 │   └── public/         # Static assets
 ├── 🐳 docker-compose.yml
 ├── 📜 run.sh           # One-click launcher
