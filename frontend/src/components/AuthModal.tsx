@@ -129,26 +129,27 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          key="auth-modal-wrapper"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        >
-          {/* Backdrop Blur overlay */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="absolute inset-0 bg-black/85"
-          />
+    // The full-screen wrapper is ALWAYS mounted and only toggles pointer
+    // events via a live prop. Never gate this layer behind AnimatePresence:
+    // an interrupted exit can strand an invisible copy that swallows every
+    // click on the page until a reload.
+    <motion.div
+      initial={false}
+      animate={{ opacity: isOpen ? 1 : 0 }}
+      transition={{ duration: 0.2 }}
+      aria-hidden={!isOpen}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
+    >
+      {/* Backdrop Blur overlay */}
+      <div onClick={onClose} className="absolute inset-0 bg-black/85" />
 
-          {/* Glowing outer gradient border */}
+      {/* Panel keeps its enter/exit animation; a stray ghost here is harmless
+          because the wrapper above disables pointer events when closed */}
+      <AnimatePresence>
+        {isOpen && (
           <motion.div
+            key="auth-modal-panel"
             initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -401,8 +402,8 @@ export default function AuthModal({ isOpen, onClose, defaultTab, onLoginSuccess 
 
             </div>
           </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
